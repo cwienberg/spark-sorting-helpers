@@ -29,8 +29,7 @@ object RDDSortingHelpers {
         .mapPartitions(new GroupByKeyIterator(_))
     }
 
-    /**
-      * Groups by key and sorts the values by some implicit ordering
+    /** Groups by key and sorts the values by some implicit ordering
       * @param partitioner the partitioner for shuffling
       * @return PairRDD of keys and sorted values
       */
@@ -38,8 +37,7 @@ object RDDSortingHelpers {
       groupByKeyAndSortValues(partitioner).mapValues(_.toVector)
     }
 
-    /**
-      * Groups by key and sorts the values by some implicit ordering
+    /** Groups by key and sorts the values by some implicit ordering
       * @param numPartitions the number of partitions for shuffling
       * @return PairRDD of keys and sorted values
       */
@@ -48,16 +46,14 @@ object RDDSortingHelpers {
       sortedGroupByKey(partitioner)
     }
 
-    /**
-      * Groups by key and sorts the values by some implicit ordering
+    /** Groups by key and sorts the values by some implicit ordering
       * @return a PairRDD of keys and sorted values
       */
     def sortedGroupByKey: RDD[(K, Iterable[V])] = {
       sortedGroupByKey(defaultPartitioner)
     }
 
-    /**
-      * Groups by key and applies a binary operation using foldLeft
+    /** Groups by key and applies a binary operation using foldLeft
       * over the values sorted by some implicit ordering
       * @param startValue the start value for the fold
       * @param op the binary operation for folding
@@ -75,8 +71,7 @@ object RDDSortingHelpers {
         .mapValues(_.foldLeft(startValue)(op))
     }
 
-    /**
-      * Groups by key and applies a binary operation using foldLeft
+    /** Groups by key and applies a binary operation using foldLeft
       * over the values sorted by some implicit ordering
       * @param startValue the start value for the fold
       * @param op the binary operation for folding
@@ -94,8 +89,7 @@ object RDDSortingHelpers {
       sortedFoldLeftByKey(startValue, op, partitioner)
     }
 
-    /**
-      * Groups by key and applies a binary operation using foldLeft
+    /** Groups by key and applies a binary operation using foldLeft
       * over the values sorted by some implicit ordering
       * @param startValue the start value for the fold
       * @param op the binary operation for folding
@@ -125,8 +119,7 @@ object RDDSortingHelpers {
         }
       }
 
-    /**
-      * Applies op to every value with some resource, where values and resources
+    /** Applies op to every value with some resource, where values and resources
       * share the same key. This allows you to send data to executors based on key,
       * so that:
       * (1) the entire set of resources are not held in memory on all executors; and,
@@ -175,8 +168,7 @@ object RDDSortingHelpers {
       }
     }
 
-    /**
-      * Applies op to every value with some resource, where values and resources
+    /** Applies op to every value with some resource, where values and resources
       * share the same key. This allows you to send data to executors based on key,
       * so that:
       * (1) the entire set of resources are not held in memory on all executors; and,
@@ -207,8 +199,7 @@ object RDDSortingHelpers {
       mapValuesWithKeyedResource(resources, op, partitioner)
     }
 
-    /**
-      * Applies op to every value with some resource, where values and resources
+    /** Applies op to every value with some resource, where values and resources
       * share the same key. This allows you to send data to executors based on key,
       * so that:
       * (1) the entire set of resources are not held in memory on all executors; and,
@@ -245,8 +236,7 @@ object RDDSortingHelpers {
     private def defaultPartitioner: Partitioner =
       Partitioner.defaultPartitioner(rdd)
 
-    /**
-      * Groups an RDD using some method which assigns group identifiers and sorts
+    /** Groups an RDD using some method which assigns group identifiers and sorts
       * the values within that grouping
       * @param groupFn a method for assigning group identifiers to values
       * @param partitioner the partitioner for shuffling
@@ -261,8 +251,7 @@ object RDDSortingHelpers {
       rdd.map(v => groupFn(v) -> v).sortedGroupByKey(partitioner).values
     }
 
-    /**
-      * Groups an RDD using some method which assigns group identifiers and sorts
+    /** Groups an RDD using some method which assigns group identifiers and sorts
       * the values within that grouping
       * @param groupFn a method for assigning group identifiers to values
       * @param numPartitions the number of partitions for shuffling
@@ -278,8 +267,7 @@ object RDDSortingHelpers {
       groupByAndSort(groupFn, partitioner)
     }
 
-    /**
-      * Groups an RDD using some method which assigns group identifiers and sorts
+    /** Groups an RDD using some method which assigns group identifiers and sorts
       * the values within that grouping
       * @param groupFn a method for assigning group identifiers to values
       * @tparam K the type of the identifier used for grouping
@@ -292,8 +280,7 @@ object RDDSortingHelpers {
       groupByAndSort(groupFn, defaultPartitioner)
     }
 
-    /**
-      * Groups an RDD using some method which assigns group identifiers and applies
+    /** Groups an RDD using some method which assigns group identifiers and applies
       * foldLeft to each group of values in sorted order by some implicit Ordering
       * @param groupFn a method for assigning group identifiers to values
       * @param startValue the start value for the fold
@@ -315,8 +302,7 @@ object RDDSortingHelpers {
         .values
     }
 
-    /**
-      * Groups an RDD using some method which assigns group identifiers and applies
+    /** Groups an RDD using some method which assigns group identifiers and applies
       * foldLeft to each group of values in sorted order by some implicit Ordering
       * @param groupFn a method for assigning group identifiers to values
       * @param startValue the start value for the fold
@@ -336,8 +322,7 @@ object RDDSortingHelpers {
       sortedFoldLeftBy(groupFn, startValue, op, partitioner)
     }
 
-    /**
-      * Groups an RDD using some method which assigns group identifiers and applies
+    /** Groups an RDD using some method which assigns group identifiers and applies
       * foldLeft to each group of values in sorted order by some implicit Ordering
       * @param groupFn a method for assigning group identifiers to values
       * @param startValue the start value for the fold
