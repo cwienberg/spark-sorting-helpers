@@ -17,11 +17,18 @@ class SecondarySortPartitionerTest extends AnyFunSuite {
     )
     assert(
       outerPartitioner.getPartition(("key", 0)) == innerPartitioner
-        .getPartition("key")
+        .getPartition(("key", 0))
+    )
+    assert(
+      outerPartitioner.getPartition(SecondarySortKey("key", 0)) == innerPartitioner.getPartition("key")
     )
     assert(
       outerPartitioner.getPartition((4, 0)) == innerPartitioner
-        .getPartition((4))
+        .getPartition((4, 0))
+    )
+    assert(
+      outerPartitioner.getPartition(SecondarySortKey(4, 0)) == innerPartitioner
+        .getPartition(4)
     )
   }
 

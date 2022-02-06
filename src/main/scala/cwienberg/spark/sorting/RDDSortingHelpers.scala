@@ -23,9 +23,10 @@ object RDDSortingHelpers {
         new SecondarySortPartitioner[K, V](partitioner)
 
       rdd
+        .map(SecondarySortKey(_))
         .map((_, ()))
         .repartitionAndSortWithinPartitions(secondarySortPartitioner)
-        .mapPartitions(_.map(_._1), preservesPartitioning = true)
+        .mapPartitions(_.map(_._1.toTuple), preservesPartitioning = true)
         .mapPartitions(new GroupByKeyIterator(_))
     }
 
