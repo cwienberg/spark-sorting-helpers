@@ -12,8 +12,8 @@ private[sorting] class SecondarySortPartitioner[K: ClassTag, V: ClassTag](
   override def numPartitions: Int = partitioner.numPartitions
 
   override def getPartition(key: Any): Int = {
-    if (key.isInstanceOf[SecondarySortKey[_,_]]) {
-      partitioner.getPartition(key.asInstanceOf[SecondarySortKey[K,V]].key)
+    if (key.isInstanceOf[SecondarySortKey[_, _]]) {
+      partitioner.getPartition(key.asInstanceOf[SecondarySortKey[K, V]].key)
     } else {
       partitioner.getPartition(key)
     }
