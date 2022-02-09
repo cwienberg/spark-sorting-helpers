@@ -8,7 +8,7 @@ class SecondarySortPartitionerTest extends AnyFunSuite {
   test("SecondarySortPartitioner works as expected") {
     val innerPartitioner = new HashPartitioner(3)
     val outerPartitioner =
-      new SecondarySortPartitioner[String, Int](innerPartitioner)
+      new SecondarySortPartitioner(innerPartitioner)
     assert(outerPartitioner.numPartitions == 3)
     assert(outerPartitioner == innerPartitioner)
     assert(

@@ -20,7 +20,7 @@ object RDDSortingHelpers {
       partitioner: Partitioner
     ): RDD[(K, Iterator[V])] = {
       val secondarySortPartitioner =
-        new SecondarySortPartitioner[K, V](partitioner)
+        new SecondarySortPartitioner(partitioner)
 
       rdd
         .map(SecondarySortKey(_))
@@ -228,6 +228,5 @@ object RDDSortingHelpers {
       val partitioner = Partitioner.defaultPartitioner(rdd, resources)
       mapValuesWithKeyedResource(resources, op, partitioner)
     }
-
   }
 }
