@@ -56,7 +56,7 @@ object RDDSortingHelpers {
       * @return PairRDD with keys and values, where values are the result
       *         of applying foldLeft across the sorted values
       */
-    def sortedFoldLeftByKey[A: ClassTag](
+    def sortedFoldLeftByKey[A](
       startValue: A,
       op: (A, V) => A,
       partitioner: Partitioner
@@ -74,7 +74,7 @@ object RDDSortingHelpers {
       * @return PairRDD with keys and values, where values are the result
       *         of applying foldLeft across the sorted values
       */
-    def sortedFoldLeftByKey[A: ClassTag](
+    def sortedFoldLeftByKey[A](
       startValue: A,
       op: (A, V) => A,
       numPartitions: Int
@@ -91,7 +91,7 @@ object RDDSortingHelpers {
       * @return PairRDD with keys and values, where values are the result
       *         of applying foldLeft across the sorted values
       */
-    def sortedFoldLeftByKey[A: ClassTag](
+    def sortedFoldLeftByKey[A](
       startValue: A,
       op: (A, V) => A
     ): RDD[(K, A)] = {
@@ -135,7 +135,7 @@ object RDDSortingHelpers {
       * @return PairRDD of values transformed by applying the operation with the appropriate
       *         resource
       */
-    def mapValuesWithKeyedResource[R: ClassTag, A: ClassTag](
+    def mapValuesWithKeyedResource[R: ClassTag, A](
       resources: RDD[(K, R)],
       op: R => V => A,
       partitioner: Partitioner
@@ -184,7 +184,7 @@ object RDDSortingHelpers {
       * @return PairRDD of values transformed by applying the operation with the appropriate
       *         resource
       */
-    def mapValuesWithKeyedResource[R: ClassTag, A: ClassTag](
+    def mapValuesWithKeyedResource[R: ClassTag, A](
       resources: RDD[(K, R)],
       op: R => V => A,
       numPartitions: Int
@@ -214,7 +214,7 @@ object RDDSortingHelpers {
       * @return PairRDD of values transformed by applying the operation with the appropriate
       *         resource
       */
-    def mapValuesWithKeyedResource[R: ClassTag, A: ClassTag](
+    def mapValuesWithKeyedResource[R: ClassTag, A](
       resources: RDD[(K, R)],
       op: R => V => A
     ): RDD[(K, A)] = {
@@ -222,7 +222,7 @@ object RDDSortingHelpers {
       mapValuesWithKeyedResource(resources, op, partitioner)
     }
 
-    def fullOuterJoinWithSortedValues[B: Ordering: ClassTag, C: Ordering: ClassTag, D: Ordering: ClassTag](rddB: RDD[(K, B)], rddC: RDD[(K, C)], rddD: RDD[(K, D)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C], Option[D]))] = {
+    def fullOuterJoinWithSortedValues[B: Ordering, C: Ordering, D: Ordering](rddB: RDD[(K, B)], rddC: RDD[(K, C)], rddD: RDD[(K, D)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C], Option[D]))] = {
       val thisPartitioned = repartitionAndSort(rdd, partitioner)
       val bPartitioned = repartitionAndSort(rddB, partitioner)
       val cPartitioned = repartitionAndSort(rddC, partitioner)
@@ -232,7 +232,7 @@ object RDDSortingHelpers {
       }
     }
 
-    def fullOuterJoinWithSortedValues[B: Ordering: ClassTag, C: Ordering: ClassTag](rddB: RDD[(K, B)], rddC: RDD[(K, C)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C]))] = {
+    def fullOuterJoinWithSortedValues[B: Ordering, C: Ordering](rddB: RDD[(K, B)], rddC: RDD[(K, C)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C]))] = {
       val thisPartitioned = repartitionAndSort(rdd, partitioner)
       val bPartitioned = repartitionAndSort(rddB, partitioner)
       val cPartitioned = repartitionAndSort(rddC, partitioner)
@@ -241,7 +241,7 @@ object RDDSortingHelpers {
       }
     }
 
-    def fullOuterJoinWithSortedValues[B: Ordering: ClassTag](rddB: RDD[(K, B)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B]))] = {
+    def fullOuterJoinWithSortedValues[B: Ordering](rddB: RDD[(K, B)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B]))] = {
       val thisPartitioned = repartitionAndSort(rdd, partitioner)
       val bPartitioned = repartitionAndSort(rddB, partitioner)
       thisPartitioned.zipPartitions(bPartitioned, preservesPartitioning = true) {
@@ -250,7 +250,7 @@ object RDDSortingHelpers {
     }
   }
 
-  private def repartitionAndSort[K: Ordering: ClassTag, V: Ordering: ClassTag](rdd: RDD[(K, V)], partitioner: Partitioner): RDD[(K, V)] = {
+  private def repartitionAndSort[K: Ordering, V: Ordering](rdd: RDD[(K, V)], partitioner: Partitioner): RDD[(K, V)] = {
     rdd
       .map(SecondarySortKey(_))
       .map((_, ()))

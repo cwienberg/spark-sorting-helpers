@@ -2,8 +2,6 @@ package cwienberg.spark.sorting
 
 import org.apache.spark.Partitioner
 
-import scala.reflect.ClassTag
-
 private[sorting] class SecondarySortPartitioner(
   partitioner: Partitioner
 ) extends Partitioner
