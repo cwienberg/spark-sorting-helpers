@@ -19,15 +19,8 @@ object RDDSortingHelpers {
     private def groupByKeyAndSortValues(
       partitioner: Partitioner
     ): RDD[(K, Iterator[V])] = {
-      val secondarySortPartitioner =
-        new SecondarySortPartitioner(partitioner)
-
-      rdd
-        .map(SecondarySortKey(_))
-        .map((_, ()))
-        .repartitionAndSortWithinPartitions(secondarySortPartitioner)
-        .mapPartitions(_.map(_._1.toTuple), preservesPartitioning = true)
-        .mapPartitions(new GroupByKeyIterator(_))
+      repartitionAndSort(rdd, partitioner)
+        .mapPartitions(new GroupByKeyIterator(_), preservesPartitioning = true)
     }
 
     /** Groups by key and sorts the values by some implicit ordering
@@ -228,5 +221,40 @@ object RDDSortingHelpers {
       val partitioner = Partitioner.defaultPartitioner(rdd, resources)
       mapValuesWithKeyedResource(resources, op, partitioner)
     }
+
+    def fullOuterJoinWithSortedValues[B: Ordering: ClassTag, C: Ordering: ClassTag, D: Ordering: ClassTag](rddB: RDD[(K, B)], rddC: RDD[(K, C)], rddD: RDD[(K, D)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C], Option[D]))] = {
+      val thisPartitioned = repartitionAndSort(rdd, partitioner)
+      val bPartitioned = repartitionAndSort(rddB, partitioner)
+      val cPartitioned = repartitionAndSort(rddC, partitioner)
+      val dPartitioned = repartitionAndSort(rddD, partitioner)
+      thisPartitioned.zipPartitions(bPartitioned, cPartitioned, dPartitioned, preservesPartitioning = true) {
+        (iterV, iterB, iterC, iterD) => OuterJoinIterator(iterV, iterB, iterC, iterD)
+      }
+    }
+
+    def fullOuterJoinWithSortedValues[B: Ordering: ClassTag, C: Ordering: ClassTag](rddB: RDD[(K, B)], rddC: RDD[(K, C)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C]))] = {
+      val thisPartitioned = repartitionAndSort(rdd, partitioner)
+      val bPartitioned = repartitionAndSort(rddB, partitioner)
+      val cPartitioned = repartitionAndSort(rddC, partitioner)
+      thisPartitioned.zipPartitions(bPartitioned, cPartitioned, preservesPartitioning = true) {
+        (iterV, iterB, iterC) => OuterJoinIterator(iterV, iterB, iterC)
+      }
+    }
+
+    def fullOuterJoinWithSortedValues[B: Ordering: ClassTag](rddB: RDD[(K, B)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B]))] = {
+      val thisPartitioned = repartitionAndSort(rdd, partitioner)
+      val bPartitioned = repartitionAndSort(rddB, partitioner)
+      thisPartitioned.zipPartitions(bPartitioned, preservesPartitioning = true) {
+        (iterV, iterB) => OuterJoinIterator(iterV, iterB)
+      }
+    }
+  }
+
+  private def repartitionAndSort[K: Ordering: ClassTag, V: Ordering: ClassTag](rdd: RDD[(K, V)], partitioner: Partitioner): RDD[(K, V)] = {
+    rdd
+      .map(SecondarySortKey(_))
+      .map((_, ()))
+      .repartitionAndSortWithinPartitions(new SecondarySortPartitioner(partitioner))
+      .mapPartitions(_.map(_._1.toTuple), preservesPartitioning = true)
   }
 }
