@@ -91,10 +91,7 @@ object RDDSortingHelpers {
       * @return PairRDD with keys and values, where values are the result
       *         of applying foldLeft across the sorted values
       */
-    def sortedFoldLeftByKey[A](
-      startValue: A,
-      op: (A, V) => A
-    ): RDD[(K, A)] = {
+    def sortedFoldLeftByKey[A](startValue: A, op: (A, V) => A): RDD[(K, A)] = {
       sortedFoldLeftByKey(startValue, op, defaultPartitioner)
     }
 
@@ -222,39 +219,293 @@ object RDDSortingHelpers {
       mapValuesWithKeyedResource(resources, op, partitioner)
     }
 
-    def fullOuterJoinWithSortedValues[B: Ordering, C: Ordering, D: Ordering](rddB: RDD[(K, B)], rddC: RDD[(K, C)], rddD: RDD[(K, D)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C], Option[D]))] = {
+    /** Performs a full outer join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param rddD another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @tparam D the type of the values in rddD
+      * @return PairRDD with keys and values, where values are Some if there was
+      *         a value in the corresponding RDD for that key, and None if there
+      *         were no values.
+      */
+    def fullOuterJoinWithSortedValues[B: Ordering, C: Ordering, D: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      rddD: RDD[(K, D)],
+      partitioner: Partitioner
+    ): RDD[(K, (Option[V], Option[B], Option[C], Option[D]))] = {
       val thisPartitioned = repartitionAndSort(rdd, partitioner)
       val bPartitioned = repartitionAndSort(rddB, partitioner)
       val cPartitioned = repartitionAndSort(rddC, partitioner)
       val dPartitioned = repartitionAndSort(rddD, partitioner)
-      thisPartitioned.zipPartitions(bPartitioned, cPartitioned, dPartitioned, preservesPartitioning = true) {
-        (iterV, iterB, iterC, iterD) => OuterJoinIterator(iterV, iterB, iterC, iterD)
+      thisPartitioned.zipPartitions(
+        bPartitioned,
+        cPartitioned,
+        dPartitioned,
+        preservesPartitioning = true
+      ) { (iterV, iterB, iterC, iterD) =>
+        OuterJoinIterator(iterV, iterB, iterC, iterD)
       }
     }
 
-    def fullOuterJoinWithSortedValues[B: Ordering, C: Ordering](rddB: RDD[(K, B)], rddC: RDD[(K, C)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B], Option[C]))] = {
+    /** Performs a full outer join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @return PairRDD with keys and values, where values are Some if there was
+      *         a value in the corresponding RDD for that key, and None if there
+      *         were no values.
+      */
+    def fullOuterJoinWithSortedValues[B: Ordering, C: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      partitioner: Partitioner
+    ): RDD[(K, (Option[V], Option[B], Option[C]))] = {
       val thisPartitioned = repartitionAndSort(rdd, partitioner)
       val bPartitioned = repartitionAndSort(rddB, partitioner)
       val cPartitioned = repartitionAndSort(rddC, partitioner)
-      thisPartitioned.zipPartitions(bPartitioned, cPartitioned, preservesPartitioning = true) {
-        (iterV, iterB, iterC) => OuterJoinIterator(iterV, iterB, iterC)
+      thisPartitioned.zipPartitions(
+        bPartitioned,
+        cPartitioned,
+        preservesPartitioning = true
+      ) { (iterV, iterB, iterC) =>
+        OuterJoinIterator(iterV, iterB, iterC)
       }
     }
 
-    def fullOuterJoinWithSortedValues[B: Ordering](rddB: RDD[(K, B)], partitioner: Partitioner): RDD[(K, (Option[V], Option[B]))] = {
+    /** Performs a full outer join by key
+      * @param rddB another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @return PairRDD with keys and values, where values are Some if there was
+      *         a value in the corresponding RDD for that key, and None if there
+      *         were no values.
+      */
+    def fullOuterJoinWithSortedValues[B: Ordering](
+      rddB: RDD[(K, B)],
+      partitioner: Partitioner
+    ): RDD[(K, (Option[V], Option[B]))] = {
       val thisPartitioned = repartitionAndSort(rdd, partitioner)
       val bPartitioned = repartitionAndSort(rddB, partitioner)
-      thisPartitioned.zipPartitions(bPartitioned, preservesPartitioning = true) {
-        (iterV, iterB) => OuterJoinIterator(iterV, iterB)
+      thisPartitioned.zipPartitions(
+        bPartitioned,
+        preservesPartitioning = true
+      ) { (iterV, iterB) =>
+        OuterJoinIterator(iterV, iterB)
+      }
+    }
+
+    /** Performs a inner join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param rddD another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @tparam D the type of the values in rddD
+      * @return PairRDD with keys and values
+      */
+    def innerJoinWithSortedValues[B: Ordering, C: Ordering, D: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      rddD: RDD[(K, D)],
+      partitioner: Partitioner
+    ): RDD[(K, (V, B, C, D))] = {
+      fullOuterJoinWithSortedValues(rddB, rddC, rddD, partitioner)
+        .flatMapValues { case (maybeV, maybeB, maybeC, maybeD) =>
+          for {
+            v <- maybeV
+            b <- maybeB
+            c <- maybeC
+            d <- maybeD
+          } yield (v, b, c, d)
+        }
+    }
+
+    /** Performs a inner join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @return PairRDD with keys and values
+      */
+    def innerJoinWithSortedValues[B: Ordering, C: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      partitioner: Partitioner
+    ): RDD[(K, (V, B, C))] = {
+      fullOuterJoinWithSortedValues(rddB, rddC, partitioner).flatMapValues {
+        case (maybeV, maybeB, maybeC) =>
+          for {
+            v <- maybeV
+            b <- maybeB
+            c <- maybeC
+          } yield (v, b, c)
+      }
+    }
+
+    /** Performs a inner join by key
+      * @param rddB another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @return PairRDD with keys and values
+      */
+    def innerJoinWithSortedValues[B: Ordering](
+      rddB: RDD[(K, B)],
+      partitioner: Partitioner
+    ): RDD[(K, (V, B))] = {
+      fullOuterJoinWithSortedValues(rddB, partitioner).flatMapValues {
+        case (maybeV, maybeB) =>
+          for {
+            v <- maybeV
+            b <- maybeB
+          } yield (v, b)
+      }
+    }
+
+    /** Performs a left join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param rddD another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @tparam D the type of the values in rddD
+      * @return PairRDD with keys and values
+      */
+    def leftJoinWithSortedValues[B: Ordering, C: Ordering, D: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      rddD: RDD[(K, D)],
+      partitioner: Partitioner
+    ): RDD[(K, (V, Option[B], Option[C], Option[D]))] = {
+      fullOuterJoinWithSortedValues(rddB, rddC, rddD, partitioner)
+        .flatMapValues { case (maybeV, maybeB, maybeC, maybeD) =>
+          for {
+            v <- maybeV
+          } yield (v, maybeB, maybeC, maybeD)
+        }
+    }
+
+    /** Performs a left join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @return PairRDD with keys and values
+      */
+    def leftJoinWithSortedValues[B: Ordering, C: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      partitioner: Partitioner
+    ): RDD[(K, (V, Option[B], Option[C]))] = {
+      fullOuterJoinWithSortedValues(rddB, rddC, partitioner).flatMapValues {
+        case (maybeV, maybeB, maybeC) =>
+          for {
+            v <- maybeV
+          } yield (v, maybeB, maybeC)
+      }
+    }
+
+    /** Performs a left join by key
+      * @param rddB another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @return PairRDD with keys and values
+      */
+    def leftJoinWithSortedValues[B: Ordering](
+      rddB: RDD[(K, B)],
+      partitioner: Partitioner
+    ): RDD[(K, (V, Option[B]))] = {
+      fullOuterJoinWithSortedValues(rddB, partitioner).flatMapValues {
+        case (maybeV, maybeB) =>
+          for {
+            v <- maybeV
+          } yield (v, maybeB)
+      }
+    }
+
+    /** Performs a right join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param rddD another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @tparam D the type of the values in rddD
+      * @return PairRDD with keys and values
+      */
+    def rightJoinWithSortedValues[B: Ordering, C: Ordering, D: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      rddD: RDD[(K, D)],
+      partitioner: Partitioner
+    ): RDD[(K, (Option[V], Option[B], Option[C], D))] = {
+      fullOuterJoinWithSortedValues(rddB, rddC, rddD, partitioner)
+        .flatMapValues { case (maybeV, maybeB, maybeC, maybeD) =>
+          for {
+            d <- maybeD
+          } yield (maybeV, maybeB, maybeC, d)
+        }
+    }
+
+    /** Performs a right join by key
+      * @param rddB another RDD to join with
+      * @param rddC another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @tparam C the type of the values in rddC
+      * @return PairRDD with keys and values
+      */
+    def rightJoinWithSortedValues[B: Ordering, C: Ordering](
+      rddB: RDD[(K, B)],
+      rddC: RDD[(K, C)],
+      partitioner: Partitioner
+    ): RDD[(K, (Option[V], Option[B], C))] = {
+      fullOuterJoinWithSortedValues(rddB, rddC, partitioner).flatMapValues {
+        case (maybeV, maybeB, maybeC) =>
+          for {
+            c <- maybeC
+          } yield (maybeV, maybeB, c)
+      }
+    }
+
+    /** Performs a right join by key
+      * @param rddB another RDD to join with
+      * @param partitioner the partitioner for shuffling
+      * @tparam B the type of the values in rddB
+      * @return PairRDD with keys and values
+      */
+    def rightJoinWithSortedValues[B: Ordering](
+      rddB: RDD[(K, B)],
+      partitioner: Partitioner
+    ): RDD[(K, (Option[V], B))] = {
+      fullOuterJoinWithSortedValues(rddB, partitioner).flatMapValues {
+        case (maybeV, maybeB) =>
+          for {
+            b <- maybeB
+          } yield (maybeV, b)
       }
     }
   }
 
-  private def repartitionAndSort[K: Ordering, V: Ordering](rdd: RDD[(K, V)], partitioner: Partitioner): RDD[(K, V)] = {
+  private def repartitionAndSort[K: Ordering, V: Ordering](
+    rdd: RDD[(K, V)],
+    partitioner: Partitioner
+  ): RDD[(K, V)] = {
     rdd
       .map(SecondarySortKey(_))
       .map((_, ()))
-      .repartitionAndSortWithinPartitions(new SecondarySortPartitioner(partitioner))
+      .repartitionAndSortWithinPartitions(
+        new SecondarySortPartitioner(partitioner)
+      )
       .mapPartitions(_.map(_._1.toTuple), preservesPartitioning = true)
   }
 }

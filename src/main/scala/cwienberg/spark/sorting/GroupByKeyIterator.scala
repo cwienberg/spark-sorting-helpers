@@ -43,7 +43,7 @@ private[sorting] class GroupByKeyIterator[K, V](iter: Iterator[(K, V)])
 }
 
 private[sorting] object GroupByKeyIterator {
-  def empty[K, V]: GroupByKeyIterator[K,V] = {
+  def empty[K, V]: GroupByKeyIterator[K, V] = {
     new GroupByKeyIterator(Iterator.empty)
   }
 }

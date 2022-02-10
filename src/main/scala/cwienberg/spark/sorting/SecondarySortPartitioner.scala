@@ -2,9 +2,8 @@ package cwienberg.spark.sorting
 
 import org.apache.spark.Partitioner
 
-private[sorting] class SecondarySortPartitioner(
-  partitioner: Partitioner
-) extends Partitioner
+private[sorting] class SecondarySortPartitioner(partitioner: Partitioner)
+    extends Partitioner
     with Serializable {
 
   override def numPartitions: Int = partitioner.numPartitions
