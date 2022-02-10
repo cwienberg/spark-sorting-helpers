@@ -55,22 +55,28 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
           d <- ds
         } yield (None, None, None, d)
       case (None, None, Some(cs), maybeDs) =>
+        val ds = maybeDs.getOrElse(Iterator(None)).toStream
         for {
           c <- cs
-          d <- maybeDs.getOrElse(Iterator(None)).toStream
+          d <- ds
         } yield (None, None, c, d)
       case (None, Some(bs), maybeCs, maybeDs) =>
+        val cs = maybeCs.getOrElse(Iterator(None)).toStream
+        val ds = maybeDs.getOrElse(Iterator(None)).toStream
         for {
           b <- bs
-          c <- maybeCs.getOrElse(Iterator(None)).toStream
-          d <- maybeDs.getOrElse(Iterator(None)).toStream
+          c <- cs
+          d <- ds
         } yield (None, b, c, d)
       case (Some(as), maybeBs, maybeCs, maybeDs) =>
+        val bs = maybeBs.getOrElse(Iterator(None)).toStream
+        val cs = maybeCs.getOrElse(Iterator(None)).toStream
+        val ds = maybeDs.getOrElse(Iterator(None)).toStream
         for {
           a <- as
-          b <- maybeBs.getOrElse(Iterator(None)).toStream
-          c <- maybeCs.getOrElse(Iterator(None)).toStream
-          d <- maybeDs.getOrElse(Iterator(None)).toStream
+          b <- bs
+          c <- cs
+          d <- ds
         } yield (a, b, c, d)
       case _ => throw new RuntimeException(s"Issue with key ${minKey}")
     }

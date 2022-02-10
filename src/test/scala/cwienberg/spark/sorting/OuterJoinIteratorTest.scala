@@ -40,4 +40,14 @@ class OuterJoinIteratorTest extends AnyFunSuite {
     )
   }
 
+  test("joins keys with repeat in same iterator") {
+    val iter = OuterJoinIterator(Iterator(1->5, 1->6), Iterator(1->7), Iterator(1->8), Iterator(1->9))
+    assert(
+      iter.toVector == Vector(
+        1 -> (Some(5), Some(7), Some(8), Some(9)),
+        1 -> (Some(6), Some(7), Some(8), Some(9))
+      )
+    )
+  }
+
 }
