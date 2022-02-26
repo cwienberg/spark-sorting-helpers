@@ -300,4 +300,189 @@ class RDDSortingHelpersTest
     )
   }
 
+  test("innerJoinWithSortedValues joins 4 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val rdd4 = sc.parallelize(Seq(
+      "a" -> "rdd4-a", "b" -> "rdd4-b", "c" -> "rdd4-c", "d" -> "rdd4-d"
+    ))
+    val actual = rdd1.innerJoinWithSortedValues(rdd2, rdd3, rdd4, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "b" -> ("rdd1-b", "rdd2-b", "rdd3-b", "rdd4-b"),
+        "d" -> ("rdd1-d1", "rdd2-d", "rdd3-d", "rdd4-d"),
+        "d" -> ("rdd1-d2", "rdd2-d", "rdd3-d", "rdd4-d")
+      )
+    )
+  }
+
+  test("innerJoinWithSortedValues joins 3 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val actual = rdd1.innerJoinWithSortedValues(rdd2, rdd3, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "b" -> ("rdd1-b", "rdd2-b", "rdd3-b"),
+        "d" -> ("rdd1-d1", "rdd2-d", "rdd3-d"),
+        "d" -> ("rdd1-d2", "rdd2-d", "rdd3-d")
+      )
+    )
+  }
+
+  test("innerJoinWithSortedValues joins 2 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val actual = rdd1.innerJoinWithSortedValues(rdd2, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "b" -> ("rdd1-b", "rdd2-b"),
+        "d" -> ("rdd1-d1", "rdd2-d"),
+        "d" -> ("rdd1-d2", "rdd2-d")
+      )
+    )
+  }
+
+  test("leftJoinWithSortedValues joins 4 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val rdd4 = sc.parallelize(Seq(
+      "a" -> "rdd4-a", "b" -> "rdd4-b", "c" -> "rdd4-c", "d" -> "rdd4-d"
+    ))
+    val actual = rdd1.leftJoinWithSortedValues(rdd2, rdd3, rdd4, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> ("rdd1-a", None, Some("rdd3-a"), Some("rdd4-a")),
+        "b" -> ("rdd1-b", Some("rdd2-b"), Some("rdd3-b"), Some("rdd4-b")),
+        "d" -> ("rdd1-d1", Some("rdd2-d"), Some("rdd3-d"), Some("rdd4-d")),
+        "d" -> ("rdd1-d2", Some("rdd2-d"), Some("rdd3-d"), Some("rdd4-d"))
+      )
+    )
+  }
+
+  test("leftJoinWithSortedValues joins 3 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val actual = rdd1.leftJoinWithSortedValues(rdd2, rdd3, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> ("rdd1-a", None, Some("rdd3-a")),
+        "b" -> ("rdd1-b", Some("rdd2-b"), Some("rdd3-b")),
+        "d" -> ("rdd1-d1", Some("rdd2-d"), Some("rdd3-d")),
+        "d" -> ("rdd1-d2", Some("rdd2-d"), Some("rdd3-d"))
+      )
+    )
+  }
+
+  test("leftJoinWithSortedValues joins 2 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val actual = rdd1.leftJoinWithSortedValues(rdd2, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> ("rdd1-a", None),
+        "b" -> ("rdd1-b", Some("rdd2-b")),
+        "d" -> ("rdd1-d1", Some("rdd2-d")),
+        "d" -> ("rdd1-d2", Some("rdd2-d"))
+      )
+    )
+  }
+
+  test("rightJoinWithSortedValues joins 4 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val rdd4 = sc.parallelize(Seq(
+      "a" -> "rdd4-a", "b" -> "rdd4-b", "d" -> "rdd4-d"  // "c" -> "rdd4-c" was removed, compared to the other similar tests tests, to ensure all behaviors were covered
+    ))
+    val actual = rdd1.rightJoinWithSortedValues(rdd2, rdd3, rdd4, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> (Some("rdd1-a"), None, Some("rdd3-a"), "rdd4-a"),
+        "b" -> (Some("rdd1-b"), Some("rdd2-b"), Some("rdd3-b"), "rdd4-b"),
+        "d" -> (Some("rdd1-d1"), Some("rdd2-d"), Some("rdd3-d"), "rdd4-d"),
+        "d" -> (Some("rdd1-d2"), Some("rdd2-d"), Some("rdd3-d"), "rdd4-d")
+      )
+    )
+  }
+
+  test("rightJoinWithSortedValues joins 3 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val actual = rdd1.rightJoinWithSortedValues(rdd2, rdd3, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> (Some("rdd1-a"), None, "rdd3-a"),
+        "b" -> (Some("rdd1-b"), Some("rdd2-b"), "rdd3-b"),
+        "d" -> (Some("rdd1-d1"), Some("rdd2-d"), "rdd3-d"),
+        "d" -> (Some("rdd1-d2"), Some("rdd2-d"), "rdd3-d")
+      )
+    )
+  }
+
+  test("rightJoinWithSortedValues joins 2 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val actual = rdd1.rightJoinWithSortedValues(rdd2, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "b" -> (Some("rdd1-b"), "rdd2-b"),
+        "c" -> (None, "rdd2-c"),
+        "d" -> (Some("rdd1-d1"), "rdd2-d"),
+        "d" -> (Some("rdd1-d2"), "rdd2-d")
+      )
+    )
+  }
 }
