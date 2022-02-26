@@ -239,7 +239,7 @@ class RDDSortingHelpersTest
       "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
     ))
     val rdd2 = sc.parallelize(Seq(
-      "b" -> "rdd2-b", "d" -> "rdd2-d"
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
     ))
     val rdd3 = sc.parallelize(Seq(
       "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
@@ -252,7 +252,7 @@ class RDDSortingHelpersTest
       actual == Seq(
         "a" -> (Some("rdd1-a"), None, Some("rdd3-a"), Some("rdd4-a")),
         "b" -> (Some("rdd1-b"), Some("rdd2-b"), Some("rdd3-b"), Some("rdd4-b")),
-        "c" -> (None, None, None, Some("rdd4-c")),
+        "c" -> (None, Some("rdd2-c"), None, Some("rdd4-c")),
         "d" -> (Some("rdd1-d1"), Some("rdd2-d"), Some("rdd3-d"), Some("rdd4-d")),
         "d" -> (Some("rdd1-d2"), Some("rdd2-d"), Some("rdd3-d"), Some("rdd4-d"))
       )
@@ -264,7 +264,7 @@ class RDDSortingHelpersTest
       "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
     ))
     val rdd2 = sc.parallelize(Seq(
-      "b" -> "rdd2-b", "d" -> "rdd2-d"
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
     ))
     val rdd3 = sc.parallelize(Seq(
       "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
@@ -274,8 +274,28 @@ class RDDSortingHelpersTest
       actual == Seq(
         "a" -> (Some("rdd1-a"), None, Some("rdd3-a")),
         "b" -> (Some("rdd1-b"), Some("rdd2-b"), Some("rdd3-b")),
+        "c" -> (None, Some("rdd2-c"), None),
         "d" -> (Some("rdd1-d1"), Some("rdd2-d"), Some("rdd3-d")),
         "d" -> (Some("rdd1-d2"), Some("rdd2-d"), Some("rdd3-d"))
+      )
+    )
+  }
+
+  test("fullOuterJoinWithSortedValues joins 2 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "c" -> "rdd2-c", "d" -> "rdd2-d"
+    ))
+    val actual = rdd1.fullOuterJoinWithSortedValues(rdd2, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> (Some("rdd1-a"), None),
+        "b" -> (Some("rdd1-b"), Some("rdd2-b")),
+        "c" -> (None, Some("rdd2-c")),
+        "d" -> (Some("rdd1-d1"), Some("rdd2-d")),
+        "d" -> (Some("rdd1-d2"), Some("rdd2-d"))
       )
     )
   }
