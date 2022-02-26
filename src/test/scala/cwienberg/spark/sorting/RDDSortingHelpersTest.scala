@@ -234,4 +234,50 @@ class RDDSortingHelpersTest
     actualRDD.unpersist(false)
   }
 
+  test("fullOuterJoinWithSortedValues joins 4 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val rdd4 = sc.parallelize(Seq(
+      "a" -> "rdd4-a", "b" -> "rdd4-b", "c" -> "rdd4-c", "d" -> "rdd4-d"
+    ))
+    val actual = rdd1.fullOuterJoinWithSortedValues(rdd2, rdd3, rdd4, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> (Some("rdd1-a"), None, Some("rdd3-a"), Some("rdd4-a")),
+        "b" -> (Some("rdd1-b"), Some("rdd2-b"), Some("rdd3-b"), Some("rdd4-b")),
+        "c" -> (None, None, None, Some("rdd4-c")),
+        "d" -> (Some("rdd1-d1"), Some("rdd2-d"), Some("rdd3-d"), Some("rdd4-d")),
+        "d" -> (Some("rdd1-d2"), Some("rdd2-d"), Some("rdd3-d"), Some("rdd4-d"))
+      )
+    )
+  }
+
+  test("fullOuterJoinWithSortedValues joins 3 RDDs as expected") {
+    val rdd1 = sc.parallelize(Seq(
+      "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
+    ))
+    val rdd2 = sc.parallelize(Seq(
+      "b" -> "rdd2-b", "d" -> "rdd2-d"
+    ))
+    val rdd3 = sc.parallelize(Seq(
+      "a" -> "rdd3-a", "b" -> "rdd3-b", "d" -> "rdd3-d"
+    ))
+    val actual = rdd1.fullOuterJoinWithSortedValues(rdd2, rdd3, new HashPartitioner(3)).collect().sortBy(_._1).toSeq
+    assert(
+      actual == Seq(
+        "a" -> (Some("rdd1-a"), None, Some("rdd3-a")),
+        "b" -> (Some("rdd1-b"), Some("rdd2-b"), Some("rdd3-b")),
+        "d" -> (Some("rdd1-d1"), Some("rdd2-d"), Some("rdd3-d")),
+        "d" -> (Some("rdd1-d2"), Some("rdd2-d"), Some("rdd3-d"))
+      )
+    )
+  }
+
 }
