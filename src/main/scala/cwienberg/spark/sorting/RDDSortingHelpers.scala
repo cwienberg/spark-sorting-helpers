@@ -123,8 +123,8 @@ object RDDSortingHelpers {
       partitioner: Partitioner
     ): RDD[(K, A)] = {
       val preppedResources: RDD[(K, ResourceOrValue[R, V])] =
-        resources.mapValues(r => Resource(r))
-      val values: RDD[(K, ResourceOrValue[R, V])] = rdd.mapValues(v => Value(v))
+        resources.mapValues(Resource(_))
+      val values: RDD[(K, ResourceOrValue[R, V])] = rdd.mapValues(Value(_))
       val combined = preppedResources.union(values)
       val combinedAndSorted: RDD[(K, Iterator[ResourceOrValue[R, V]])] =
         new SecondarySortGroupingPairRDDFunctions(combined)

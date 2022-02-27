@@ -1,16 +1,22 @@
 package cwienberg.spark.sorting
 
-private[sorting] sealed abstract class ResourceOrValue[R, V] extends Product with Serializable with Ordered[ResourceOrValue[R,V]] {
+private[sorting] sealed abstract class ResourceOrValue[R, V] extends Product with Serializable {
   def isResource: Boolean
   def isValue: Boolean
 
   def getResource: R
   def getValue: V
+
+  def compare(that: ResourceOrValue[R, V]): Int
+}
+
+private[sorting] object ResourceOrValue {
+  implicit def ordering[R, V: Ordering]: Ordering[ResourceOrValue[R, V]] = _.compare(_)
 }
 
 private[sorting] final case class Resource[R, V](resource: R) extends ResourceOrValue[R, V] {
-  def isResource: Boolean = true
-  def isValue: Boolean = false
+  override def isResource: Boolean = true
+  override def isValue: Boolean = false
 
   override def getResource: R = {
     resource
@@ -31,8 +37,8 @@ private[sorting] final case class Resource[R, V](resource: R) extends ResourceOr
 }
 
 private[sorting] final case class Value[R, V: Ordering](value: V) extends ResourceOrValue[R, V] {
-  def isResource: Boolean = false
-  def isValue: Boolean = true
+  override def isResource: Boolean = false
+  override def isValue: Boolean = true
 
   override def getResource: R = {
     throw new IllegalArgumentException("Value.getResource")
