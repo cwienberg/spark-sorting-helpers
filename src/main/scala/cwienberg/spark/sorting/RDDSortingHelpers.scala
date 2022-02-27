@@ -95,21 +95,6 @@ object RDDSortingHelpers {
       sortedFoldLeftByKey(startValue, op, defaultPartitioner)
     }
 
-    private implicit def resourceValueOrdering[R]: Ordering[Either[R, V]] =
-      new Ordering[Either[R, V]] {
-        override def compare(x: Either[R, V], y: Either[R, V]): Int = {
-          (x, y) match {
-            case (Left(_), Left(_)) =>
-              throw new IllegalArgumentException(
-                "Cannot compare two resources. Do not provide two resources for the same key."
-              )
-            case (Left(_), Right(_))    => -1
-            case (Right(_), Left(_))    => 1
-            case (Right(xv), Right(yv)) => Ordering[V].compare(xv, yv)
-          }
-        }
-      }
-
     /** Applies op to every value with some resource, where values and resources
       * share the same key. This allows you to send data to executors based on key,
       * so that:
@@ -137,25 +122,21 @@ object RDDSortingHelpers {
       op: R => V => A,
       partitioner: Partitioner
     ): RDD[(K, A)] = {
-      val preppedResources: RDD[(K, Either[R, V])] =
-        resources.mapValues(r => Left(r))
-      val values: RDD[(K, Either[R, V])] = rdd.mapValues(v => Right(v))
-      val combined: RDD[(K, Either[R, V])] = preppedResources.union(values)
-      val combinedAndSorted: RDD[(K, Iterator[Either[R, V]])] =
+      val preppedResources: RDD[(K, ResourceOrValue[R, V])] =
+        resources.mapValues(r => Resource(r))
+      val values: RDD[(K, ResourceOrValue[R, V])] = rdd.mapValues(v => Value(v))
+      val combined = preppedResources.union(values)
+      val combinedAndSorted: RDD[(K, Iterator[ResourceOrValue[R, V]])] =
         new SecondarySortGroupingPairRDDFunctions(combined)
           .groupByKeyAndSortValues(partitioner)
 
       combinedAndSorted.flatMapValues { resourceThenValues =>
-        val resource = resourceThenValues
-          .next()
-          .left
-          .getOrElse(
-            throw new IllegalArgumentException(
-              "Must provide a resource for every key"
-            )
-          )
+        val maybeResource = resourceThenValues.next()
+        require(maybeResource.isResource, "Must provide a resource for every key")
+        val resource = maybeResource.getResource
+
         val valueFunction = op(resource)
-        resourceThenValues.map(_.right.get).map(valueFunction)
+        resourceThenValues.map(_.getValue).map(valueFunction)
       }
     }
 
