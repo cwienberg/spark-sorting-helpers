@@ -103,7 +103,7 @@ private[sorting] object OuterJoinIterator {
     iterB: GroupByKeyIterator[K, B],
     iterC: GroupByKeyIterator[K, C],
     iterD: GroupByKeyIterator[K, D]
-  ): OuterJoinIterator[K, A, B, C, D] = {
+  ): Iterator[(K, (Option[A], Option[B], Option[C], Option[D]))] = {
     new OuterJoinIterator(iterA, iterB, iterC, iterD)
   }
 
