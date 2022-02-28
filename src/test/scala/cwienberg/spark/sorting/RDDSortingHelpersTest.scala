@@ -168,6 +168,20 @@ class RDDSortingHelpersTest
     }
   }
 
+  test("mapValuesWithKeyedPreparedResource fails when a key has no values") {
+    val resources = Seq("key1" -> Map.empty[String, Int])
+    val resourcesRDD = sc.parallelize(resources)
+    val dataRDD = sc.emptyRDD[(String, Unit)]
+    assertThrows[SparkException] {
+      dataRDD
+        .mapValuesWithKeyedPreparedResource(
+          resourcesRDD,
+          (r: Map[String, Int]) => (_: Unit) => r
+        )
+        .collect()
+    }
+  }
+
   test(
     "mapValuesWithKeyedPreparedResource pairs the right resource to the right values and applies the operation"
   ) {
