@@ -1,6 +1,8 @@
 package cwienberg.spark.sorting
 
-private[sorting] sealed abstract class ResourceOrValue[R, V] extends Product with Serializable {
+private[sorting] sealed abstract class ResourceOrValue[R, V]
+    extends Product
+    with Serializable {
   def isResource: Boolean
   def isValue: Boolean
 
@@ -11,10 +13,12 @@ private[sorting] sealed abstract class ResourceOrValue[R, V] extends Product wit
 }
 
 private[sorting] object ResourceOrValue {
-  implicit def ordering[R, V: Ordering]: Ordering[ResourceOrValue[R, V]] = _.compare(_)
+  implicit def ordering[R, V: Ordering]: Ordering[ResourceOrValue[R, V]] =
+    _.compare(_)
 }
 
-private[sorting] final case class Resource[R, V](resource: R) extends ResourceOrValue[R, V] {
+private[sorting] final case class Resource[R, V](resource: R)
+    extends ResourceOrValue[R, V] {
   override def isResource: Boolean = true
   override def isValue: Boolean = false
 
@@ -28,15 +32,17 @@ private[sorting] final case class Resource[R, V](resource: R) extends ResourceOr
 
   override def compare(that: ResourceOrValue[R, V]): Int = {
     that match {
-      case Resource(_) => throw new IllegalArgumentException(
-        "Cannot compare two resources. Do not provide two resources for the same key."
-      )
+      case Resource(_) =>
+        throw new IllegalArgumentException(
+          "Cannot compare two resources. Do not provide two resources for the same key."
+        )
       case Value(_) => -1
     }
   }
 }
 
-private[sorting] final case class Value[R, V: Ordering](value: V) extends ResourceOrValue[R, V] {
+private[sorting] final case class Value[R, V: Ordering](value: V)
+    extends ResourceOrValue[R, V] {
   override def isResource: Boolean = false
   override def isValue: Boolean = true
 
@@ -51,7 +57,8 @@ private[sorting] final case class Value[R, V: Ordering](value: V) extends Resour
   override def compare(that: ResourceOrValue[R, V]): Int = {
     that match {
       case Resource(_) => 1
-      case Value(otherValue) => implicitly[Ordering[V]].compare(value, otherValue)
+      case Value(otherValue) =>
+        implicitly[Ordering[V]].compare(value, otherValue)
     }
   }
 }

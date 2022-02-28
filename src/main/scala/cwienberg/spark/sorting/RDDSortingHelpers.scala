@@ -132,7 +132,10 @@ object RDDSortingHelpers {
 
       combinedAndSorted.flatMapValues { resourceThenValues =>
         val maybeResource = resourceThenValues.next()
-        require(maybeResource.isResource, "Must provide a resource for every key")
+        require(
+          maybeResource.isResource,
+          "Must provide a resource for every key"
+        )
         val resource = maybeResource.getResource
 
         val valueFunction = op(resource)
