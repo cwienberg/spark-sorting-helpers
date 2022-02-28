@@ -1,6 +1,6 @@
 package cwienberg.spark.sorting
 
-private[sorting] sealed abstract class ResourceOrValue[R, V]
+private[sorting] sealed abstract class ResourceOrValue[+R, +V]
     extends Product
     with Serializable {
   def isResource: Boolean
@@ -9,7 +9,7 @@ private[sorting] sealed abstract class ResourceOrValue[R, V]
   def getResource: R
   def getValue: V
 
-  def compare(that: ResourceOrValue[R, V]): Int
+  def compare[R1 >: R, V1 >: V: Ordering](that: ResourceOrValue[R1, V1]): Int
 }
 
 private[sorting] object ResourceOrValue {
@@ -17,7 +17,7 @@ private[sorting] object ResourceOrValue {
     _.compare(_)
 }
 
-private[sorting] final case class Resource[R, V](resource: R)
+private[sorting] final case class Resource[+R, +V](resource: R)
     extends ResourceOrValue[R, V] {
   override def isResource: Boolean = true
   override def isValue: Boolean = false
@@ -30,7 +30,9 @@ private[sorting] final case class Resource[R, V](resource: R)
     throw new IllegalArgumentException("Resource.getValue")
   }
 
-  override def compare(that: ResourceOrValue[R, V]): Int = {
+  override def compare[R1 >: R, V1 >: V: Ordering](
+    that: ResourceOrValue[R1, V1]
+  ): Int = {
     that match {
       case Resource(_) =>
         throw new IllegalArgumentException(
@@ -41,7 +43,7 @@ private[sorting] final case class Resource[R, V](resource: R)
   }
 }
 
-private[sorting] final case class Value[R, V: Ordering](value: V)
+private[sorting] final case class Value[+R, +V: Ordering](value: V)
     extends ResourceOrValue[R, V] {
   override def isResource: Boolean = false
   override def isValue: Boolean = true
@@ -54,11 +56,13 @@ private[sorting] final case class Value[R, V: Ordering](value: V)
     value
   }
 
-  override def compare(that: ResourceOrValue[R, V]): Int = {
+  override def compare[R1 >: R, V1 >: V: Ordering](
+    that: ResourceOrValue[R1, V1]
+  ): Int = {
     that match {
       case Resource(_) => 1
       case Value(otherValue) =>
-        implicitly[Ordering[V]].compare(value, otherValue)
+        implicitly[Ordering[V1]].compare(value, otherValue)
     }
   }
 }
