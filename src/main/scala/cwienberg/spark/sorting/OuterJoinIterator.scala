@@ -99,15 +99,6 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
 
 private[sorting] object OuterJoinIterator {
   def apply[K: Ordering, A, B, C, D](
-    iterA: GroupByKeyIterator[K, A],
-    iterB: GroupByKeyIterator[K, B],
-    iterC: GroupByKeyIterator[K, C],
-    iterD: GroupByKeyIterator[K, D]
-  ): Iterator[(K, (Option[A], Option[B], Option[C], Option[D]))] = {
-    new OuterJoinIterator(iterA, iterB, iterC, iterD)
-  }
-
-  def apply[K: Ordering, A, B, C, D](
     iterA: Iterator[(K, A)],
     iterB: Iterator[(K, B)],
     iterC: Iterator[(K, C)],

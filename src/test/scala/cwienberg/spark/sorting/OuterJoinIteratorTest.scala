@@ -50,4 +50,12 @@ class OuterJoinIteratorTest extends AnyFunSuite {
     )
   }
 
+  test("next on empty iterator throws") {
+    val emptyIter = OuterJoinIterator[Int, Int, Int](Iterator.empty, Iterator.empty)
+    assert(emptyIter.isEmpty)
+    assertThrows[RuntimeException] {
+      emptyIter.next()
+    }
+  }
+
 }
