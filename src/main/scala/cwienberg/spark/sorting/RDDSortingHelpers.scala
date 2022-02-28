@@ -3,6 +3,7 @@ package cwienberg.spark.sorting
 import org.apache.spark.{HashPartitioner, Partitioner}
 import org.apache.spark.rdd.RDD
 
+import scala.math.Ordered.orderingToOrdered
 import scala.reflect.ClassTag
 
 object RDDSortingHelpers {
@@ -95,21 +96,6 @@ object RDDSortingHelpers {
       sortedFoldLeftByKey(startValue, op, defaultPartitioner)
     }
 
-    private implicit def resourceValueOrdering[R]: Ordering[Either[R, V]] =
-      new Ordering[Either[R, V]] {
-        override def compare(x: Either[R, V], y: Either[R, V]): Int = {
-          (x, y) match {
-            case (Left(_), Left(_)) =>
-              throw new IllegalArgumentException(
-                "Cannot compare two resources. Do not provide two resources for the same key."
-              )
-            case (Left(_), Right(_))    => -1
-            case (Right(_), Left(_))    => 1
-            case (Right(xv), Right(yv)) => Ordering[V].compare(xv, yv)
-          }
-        }
-      }
-
     /** Applies op to every value with some resource, where values and resources
       * share the same key. This allows you to send data to executors based on key,
       * so that:
@@ -137,25 +123,42 @@ object RDDSortingHelpers {
       op: R => V => A,
       partitioner: Partitioner
     ): RDD[(K, A)] = {
-      val preppedResources: RDD[(K, Either[R, V])] =
-        resources.mapValues(r => Left(r))
-      val values: RDD[(K, Either[R, V])] = rdd.mapValues(v => Right(v))
-      val combined: RDD[(K, Either[R, V])] = preppedResources.union(values)
-      val combinedAndSorted: RDD[(K, Iterator[Either[R, V]])] =
-        new SecondarySortGroupingPairRDDFunctions(combined)
-          .groupByKeyAndSortValues(partitioner)
-
-      combinedAndSorted.flatMapValues { resourceThenValues =>
-        val resource = resourceThenValues
-          .next()
-          .left
-          .getOrElse(
-            throw new IllegalArgumentException(
+      val repartitionedResources: RDD[(K, R)] =
+        resources.repartitionAndSortWithinPartitions(partitioner)
+      val repartitionedValues: RDD[(K, Iterator[V])] = groupByKeyAndSortValues(
+        partitioner
+      )
+      repartitionedResources.zipPartitions(repartitionedValues, true) {
+        (resourcesIter, valuesIter) =>
+          val resourceOptionIter = resourcesIter.map(Some(_))
+          val valueOptionIter = valuesIter.map(Some(_))
+          val zippedValuesAndResources =
+            resourceOptionIter.zipAll(valueOptionIter, None, None)
+          for {
+            (maybeResource, maybeValue) <- zippedValuesAndResources
+            (resourceKey, resource) = maybeResource.getOrElse(
+              throw new IllegalArgumentException(
+                "Must provide a resource for every key"
+              )
+            )
+            (valueKey, values) = maybeValue.getOrElse(
+              throw new IllegalArgumentException(
+                "Must provide a value for every key"
+              )
+            )
+            _ = require(
+              resourceKey >= valueKey,
+              "Must provide a value for every key"
+            )
+            _ = require(
+              resourceKey <= valueKey,
               "Must provide a resource for every key"
             )
-          )
-        val valueFunction = op(resource)
-        resourceThenValues.map(_.right.get).map(valueFunction)
+            valueFunction = op(resource)
+            value <- values
+          } yield {
+            valueKey -> valueFunction(value)
+          }
       }
     }
 
