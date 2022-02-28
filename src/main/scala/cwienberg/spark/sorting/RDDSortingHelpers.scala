@@ -118,7 +118,7 @@ object RDDSortingHelpers {
       * @return PairRDD of values transformed by applying the operation with the appropriate
       *         resource
       */
-    def mapValuesWithKeyedResource[R: ClassTag, A](
+    def mapValuesWithKeyedPreparedResource[R: ClassTag, A](
       resources: RDD[(K, R)],
       op: R => V => A,
       partitioner: Partitioner
@@ -184,13 +184,13 @@ object RDDSortingHelpers {
       * @return PairRDD of values transformed by applying the operation with the appropriate
       *         resource
       */
-    def mapValuesWithKeyedResource[R: ClassTag, A](
+    def mapValuesWithKeyedPreparedResource[R: ClassTag, A](
       resources: RDD[(K, R)],
       op: R => V => A,
       numPartitions: Int
     ): RDD[(K, A)] = {
       val partitioner = new HashPartitioner(numPartitions)
-      mapValuesWithKeyedResource(resources, op, partitioner)
+      mapValuesWithKeyedPreparedResource(resources, op, partitioner)
     }
 
     /** Applies op to every value with some resource, where values and resources
@@ -214,9 +214,210 @@ object RDDSortingHelpers {
       * @return PairRDD of values transformed by applying the operation with the appropriate
       *         resource
       */
-    def mapValuesWithKeyedResource[R: ClassTag, A](
+    def mapValuesWithKeyedPreparedResource[R: ClassTag, A](
       resources: RDD[(K, R)],
       op: R => V => A
+    ): RDD[(K, A)] = {
+      val partitioner = Partitioner.defaultPartitioner(rdd, resources)
+      mapValuesWithKeyedPreparedResource(resources, op, partitioner)
+    }
+
+    /** Applies op to every value with some resource, where values and resources
+      * share the same key. This allows you to send data to executors based on key,
+      * so that:
+      * (1) the entire set of resources are not held in memory on all executors; and,
+      * (2) a specific resource is not duplicated; it is reused for all corresponding
+      *     data values
+      * One example usage might be when conducting a geospatial operation. If the keys
+      * indicate a geographic area, and the value contains geospatial resources in that
+      * geographic area, one can apply a method using geospatially local resources
+      * to all values while reducing data duplication and shuffling.
+      * @param resources a PairRDD of keys and resources, where keys are used to
+      *                  determine what data the resource is associated with for
+      *                  the operation. There must be exactly one resource for
+      *                  each key in the RDD this method is applied to
+      * @param prepareResource a function to transform the resource into what will be
+      *                        used in op
+      * @param op the operation to apply to each value. The operation takes a resource
+      *           and value and returns the transformed value
+      * @param partitioner the partitioner for shuffling
+      * @tparam R the type of resources being used
+      * @tparam A the type returned by applying the operation with the resource to each value
+      * @return PairRDD of values transformed by applying the operation with the appropriate
+      *         resource
+      */
+    def mapValuesWithKeyedPreparedResource[R: ClassTag, R1, A](
+      resources: RDD[(K, R)],
+      prepareResource: R => R1,
+      op: (R1, V) => A,
+      partitioner: Partitioner
+    ): RDD[(K, A)] = {
+      val newOp = modifyResourcePreparationAndOp(prepareResource, op)
+      mapValuesWithKeyedPreparedResource(resources, newOp, partitioner)
+    }
+
+    /** Applies op to every value with some resource, where values and resources
+      * share the same key. This allows you to send data to executors based on key,
+      * so that:
+      * (1) the entire set of resources are not held in memory on all executors; and,
+      * (2) a specific resource is not duplicated; it is reused for all corresponding
+      *     data values
+      * One example usage might be when conducting a geospatial operation. If the keys
+      * indicate a geographic area, and the value contains geospatial resources in that
+      * geographic area, one can apply a method using geospatially local resources
+      * to all values while reducing data duplication and shuffling.
+      * @param resources a PairRDD of keys and resources, where keys are used to
+      *                  determine what data the resource is associated with for
+      *                  the operation. There must be exactly one resource for
+      *                  each key in the RDD this method is applied to
+      * @param prepareResource a function to transform the resource into what will be
+      *                        used in op
+      * @param op the operation to apply to each value. The operation takes a resource
+      *           and value and returns the transformed value
+      * @param numPartitions the number of partitions for shuffling
+      * @tparam R the type of resources being used
+      * @tparam A the type returned by applying the operation with the resource to each value
+      * @return PairRDD of values transformed by applying the operation with the appropriate
+      *         resource
+      */
+    def mapValuesWithKeyedPreparedResource[R: ClassTag, R1, A](
+      resources: RDD[(K, R)],
+      prepareResource: R => R1,
+      op: (R1, V) => A,
+      numPartitions: Int
+    ): RDD[(K, A)] = {
+      val partitioner = new HashPartitioner(numPartitions)
+      mapValuesWithKeyedPreparedResource(
+        resources,
+        prepareResource,
+        op,
+        partitioner
+      )
+    }
+
+    /** Applies op to every value with some resource, where values and resources
+      * share the same key. This allows you to send data to executors based on key,
+      * so that:
+      * (1) the entire set of resources are not held in memory on all executors; and,
+      * (2) a specific resource is not duplicated; it is reused for all corresponding
+      *     data values
+      * One example usage might be when conducting a geospatial operation. If the keys
+      * indicate a geographic area, and the value contains geospatial resources in that
+      * geographic area, one can apply a method using geospatially local resources
+      * to all values while reducing data duplication and shuffling.
+      * @param resources a PairRDD of keys and resources, where keys are used to
+      *                  determine what data the resource is associated with for
+      *                  the operation. There must be exactly one resource for
+      *                  each key in the RDD this method is applied to
+      * @param prepareResource a function to transform the resource into what will be
+      *                        used in op
+      * @param op the operation to apply to each value. The operation takes a resource
+      *           and value and returns the transformed value
+      * @tparam R the type of resources being used
+      * @tparam A the type returned by applying the operation with the resource to each value
+      * @return PairRDD of values transformed by applying the operation with the appropriate
+      *         resource
+      */
+    def mapValuesWithKeyedPreparedResource[R: ClassTag, R1, A](
+      resources: RDD[(K, R)],
+      prepareResource: R => R1,
+      op: (R1, V) => A
+    ): RDD[(K, A)] = {
+      val partitioner = Partitioner.defaultPartitioner(rdd, resources)
+      mapValuesWithKeyedPreparedResource(
+        resources,
+        prepareResource,
+        op,
+        partitioner
+      )
+    }
+
+    /** Applies op to every value with some resource, where values and resources
+      * share the same key. This allows you to send data to executors based on key,
+      * so that:
+      * (1) the entire set of resources are not held in memory on all executors; and,
+      * (2) a specific resource is not duplicated; it is reused for all corresponding
+      *     data values
+      * One example usage might be when conducting a geospatial operation. If the keys
+      * indicate a geographic area, and the value contains geospatial resources in that
+      * geographic area, one can apply a method using geospatially local resources
+      * to all values while reducing data duplication and shuffling.
+      * @param resources a PairRDD of keys and resources, where keys are used to
+      *                  determine what data the resource is associated with for
+      *                  the operation. There must be exactly one resource for
+      *                  each key in the RDD this method is applied to
+      * @param op the operation to apply to each value. Takes a resource and value and
+      *           returns the transformed value
+      * @param partitioner the partitioner for shuffling
+      * @tparam R the type of resources being used
+      * @tparam A the type returned by applying the operation with the resource to each value
+      * @return PairRDD of values transformed by applying the operation with the appropriate
+      *         resource
+      */
+    def mapValuesWithKeyedResource[R: ClassTag, A](
+      resources: RDD[(K, R)],
+      op: (R, V) => A,
+      partitioner: Partitioner
+    ): RDD[(K, A)] = {
+      val newOp = modifyResourcePreparationAndOp(identity[R], op)
+      mapValuesWithKeyedPreparedResource(resources, newOp, partitioner)
+    }
+
+    /** Applies op to every value with some resource, where values and resources
+      * share the same key. This allows you to send data to executors based on key,
+      * so that:
+      * (1) the entire set of resources are not held in memory on all executors; and,
+      * (2) a specific resource is not duplicated; it is reused for all corresponding
+      *     data values
+      * One example usage might be when conducting a geospatial operation. If the keys
+      * indicate a geographic area, and the value contains geospatial resources in that
+      * geographic area, one can apply a method using geospatially local resources
+      * to all values while reducing data duplication and shuffling.
+      * @param resources a PairRDD of keys and resources, where keys are used to
+      *                  determine what data the resource is associated with for
+      *                  the operation. There must be exactly one resource for
+      *                  each key in the RDD this method is applied to
+      * @param op the operation to apply to each value. Takes a resource and value and
+      *           returns the transformed value
+      * @param numPartitions the number of partitions for shuffling
+      * @tparam R the type of resources being used
+      * @tparam A the type returned by applying the operation with the resource to each value
+      * @return PairRDD of values transformed by applying the operation with the appropriate
+      *         resource
+      */
+    def mapValuesWithKeyedResource[R: ClassTag, A](
+      resources: RDD[(K, R)],
+      op: (R, V) => A,
+      numPartitions: Int
+    ): RDD[(K, A)] = {
+      val partitioner = new HashPartitioner(numPartitions)
+      mapValuesWithKeyedResource(resources, op, partitioner)
+    }
+
+    /** Applies op to every value with some resource, where values and resources
+      * share the same key. This allows you to send data to executors based on key,
+      * so that:
+      * (1) the entire set of resources are not held in memory on all executors; and,
+      * (2) a specific resource is not duplicated; it is reused for all corresponding
+      *     data values
+      * One example usage might be when conducting a geospatial operation. If the keys
+      * indicate a geographic area, and the value contains geospatial resources in that
+      * geographic area, one can apply a method using geospatially local resources
+      * to all values while reducing data duplication and shuffling.
+      * @param resources a PairRDD of keys and resources, where keys are used to
+      *                  determine what data the resource is associated with for
+      *                  the operation. There must be exactly one resource for
+      *                  each key in the RDD this method is applied to
+      * @param op the operation to apply to each value. Takes a resource and value and
+      *           returns the transformed value
+      * @tparam R the type of resources being used
+      * @tparam A the type returned by applying the operation with the resource to each value
+      * @return PairRDD of values transformed by applying the operation with the appropriate
+      *         resource
+      */
+    def mapValuesWithKeyedResource[R: ClassTag, A](
+      resources: RDD[(K, R)],
+      op: (R, V) => A
     ): RDD[(K, A)] = {
       val partitioner = Partitioner.defaultPartitioner(rdd, resources)
       mapValuesWithKeyedResource(resources, op, partitioner)
@@ -920,5 +1121,16 @@ object RDDSortingHelpers {
         new SecondarySortPartitioner(partitioner)
       )
       .mapPartitions(_.map(_._1.toTuple), preservesPartitioning = true)
+  }
+
+  private def modifyResourcePreparationAndOp[R, R1, V, A](
+    prepareResource: R => R1,
+    op: (R1, V) => A
+  ): R => V => A = {
+    def newOp(resource: R): V => A = {
+      val preparedResource = prepareResource(resource)
+      op(preparedResource, _)
+    }
+    newOp
   }
 }

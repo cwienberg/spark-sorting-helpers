@@ -138,14 +138,14 @@ class RDDSortingHelpersTest
     actualRDD.unpersist(false)
   }
 
-  test("mapValuesWithKeyedResource fails when a key has two resources") {
+  test("mapValuesWithKeyedPreparedResource fails when a key has two resources") {
     val resources =
       Seq("key1" -> Map.empty[String, Int], "key1" -> Map.empty[String, Int])
     val resourcesRDD = sc.parallelize(resources)
     val dataRDD = sc.emptyRDD[(String, Unit)]
     assertThrows[SparkException] {
       dataRDD
-        .mapValuesWithKeyedResource(
+        .mapValuesWithKeyedPreparedResource(
           resourcesRDD,
           (r: Map[String, Int]) => (_: Unit) => r
         )
@@ -153,14 +153,14 @@ class RDDSortingHelpersTest
     }
   }
 
-  test("mapValuesWithKeyedResource fails when a key has no resources") {
+  test("mapValuesWithKeyedPreparedResource fails when a key has no resources") {
     val resources = Seq("key1" -> Map.empty[String, Int])
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq(("key1", ()), ("key2", ()))
     val dataRDD = sc.parallelize(data)
     assertThrows[SparkException] {
       dataRDD
-        .mapValuesWithKeyedResource(
+        .mapValuesWithKeyedPreparedResource(
           resourcesRDD,
           (r: Map[String, Int]) => (_: Unit) => r
         )
@@ -169,7 +169,7 @@ class RDDSortingHelpersTest
   }
 
   test(
-    "mapValuesWithKeyedResource pairs the right resource to the right values and applies the operation"
+    "mapValuesWithKeyedPreparedResource pairs the right resource to the right values and applies the operation"
   ) {
     val resources =
       Seq("key1" -> Map(1 -> 10, 2 -> 20), "key2" -> Map(3 -> -30, 4 -> -40))
@@ -177,7 +177,7 @@ class RDDSortingHelpersTest
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
     val actual = dataRDD
-      .mapValuesWithKeyedResource(
+      .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
         (r: Map[Int, Int]) => (v: Int) => r(v)
       )
@@ -188,7 +188,7 @@ class RDDSortingHelpersTest
   }
 
   test(
-    "mapValuesWithKeyedResource with numPartitions pairs the right resource to the right values and applies the operation"
+    "mapValuesWithKeyedPreparedResource with numPartitions pairs the right resource to the right values and applies the operation"
   ) {
     val resources =
       Seq("key1" -> Map(1 -> 10, 2 -> 20), "key2" -> Map(3 -> -30, 4 -> -40))
@@ -196,7 +196,7 @@ class RDDSortingHelpersTest
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
     val actualRDD = dataRDD
-      .mapValuesWithKeyedResource(
+      .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
         (r: Map[Int, Int]) => (v: Int) => r(v),
         7
@@ -211,7 +211,7 @@ class RDDSortingHelpersTest
   }
 
   test(
-    "mapValuesWithKeyedResource with partitioner pairs the right resource to the right values and applies the operation"
+    "mapValuesWithKeyedPreparedResource with partitioner pairs the right resource to the right values and applies the operation"
   ) {
     val resources =
       Seq("key1" -> Map(1 -> 10, 2 -> 20), "key2" -> Map(3 -> -30, 4 -> -40))
@@ -220,7 +220,7 @@ class RDDSortingHelpersTest
     val dataRDD = sc.parallelize(data)
     val partitioner = new RangePartitioner(3, dataRDD, true)
     val actualRDD = dataRDD
-      .mapValuesWithKeyedResource(
+      .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
         (r: Map[Int, Int]) => (v: Int) => r(v),
         partitioner
