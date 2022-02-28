@@ -81,4 +81,8 @@ class GroupByKeyIteratorTest extends AnyFunSuite {
     assertThrows[NoSuchElementException](groupedIter.next())
   }
 
+  test("empty returns an empty iterator") {
+    assert(GroupByKeyIterator.empty.isEmpty)
+  }
+
 }
