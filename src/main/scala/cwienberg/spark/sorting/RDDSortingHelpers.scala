@@ -3,6 +3,7 @@ package cwienberg.spark.sorting
 import org.apache.spark.{HashPartitioner, Partitioner}
 import org.apache.spark.rdd.RDD
 
+import scala.math.Ordered.orderingToOrdered
 import scala.reflect.ClassTag
 
 object RDDSortingHelpers {
@@ -122,25 +123,42 @@ object RDDSortingHelpers {
       op: R => V => A,
       partitioner: Partitioner
     ): RDD[(K, A)] = {
-      val preppedResources: RDD[(K, ResourceOrValue[R, V])] =
-        resources.mapValues(Resource[R, V](_))
-      val values: RDD[(K, ResourceOrValue[R, V])] =
-        rdd.mapValues(Value[R, V](_))
-      val combined = preppedResources.union(values)
-      val combinedAndSorted: RDD[(K, Iterator[ResourceOrValue[R, V]])] =
-        new SecondarySortGroupingPairRDDFunctions(combined)
-          .groupByKeyAndSortValues(partitioner)
-
-      combinedAndSorted.flatMapValues { resourceThenValues =>
-        val maybeResource = resourceThenValues.next()
-        require(
-          maybeResource.isResource,
-          "Must provide a resource for every key"
-        )
-        val resource = maybeResource.getResource
-
-        val valueFunction = op(resource)
-        resourceThenValues.map(_.getValue).map(valueFunction)
+      val repartitionedResources: RDD[(K, R)] =
+        resources.repartitionAndSortWithinPartitions(partitioner)
+      val repartitionedValues: RDD[(K, Iterator[V])] = groupByKeyAndSortValues(
+        partitioner
+      )
+      repartitionedResources.zipPartitions(repartitionedValues, true) {
+        (resourcesIter, valuesIter) =>
+          val resourceOptionIter = resourcesIter.map(Some(_))
+          val valueOptionIter = valuesIter.map(Some(_))
+          val zippedValuesAndResources =
+            resourceOptionIter.zipAll(valueOptionIter, None, None)
+          for {
+            (maybeResource, maybeValue) <- zippedValuesAndResources
+            (resourceKey, resource) = maybeResource.getOrElse(
+              throw new IllegalArgumentException(
+                "Must provide a resource for every key"
+              )
+            )
+            (valueKey, values) = maybeValue.getOrElse(
+              throw new IllegalArgumentException(
+                "Must provide a value for every key"
+              )
+            )
+            _ = require(
+              resourceKey >= valueKey,
+              "Must provide a value for every key"
+            )
+            _ = require(
+              resourceKey <= valueKey,
+              "Must provide a resource for every key"
+            )
+            valueFunction = op(resource)
+            value <- values
+          } yield {
+            valueKey -> valueFunction(value)
+          }
       }
     }
 
