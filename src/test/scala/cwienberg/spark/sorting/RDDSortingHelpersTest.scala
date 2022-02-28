@@ -248,6 +248,55 @@ class RDDSortingHelpersTest
     actualRDD.unpersist(false)
   }
 
+  test(
+    "mapValuesWithKeyedPreparedResource with separated preparation and map ops pairs the right resource to the right values and applies the operation"
+  ) {
+    val resources =
+      Seq("key1" -> Map(1 -> 10, 2 -> 20), "key2" -> Map(3 -> -30, 4 -> -40))
+    val resourcesRDD = sc.parallelize(resources)
+    val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
+    val dataRDD = sc.parallelize(data)
+    val partitioner = new RangePartitioner(3, dataRDD, true)
+    val actualRDD = dataRDD
+      .mapValuesWithKeyedPreparedResource(
+        resourcesRDD,
+        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int], v: Int) => r(v),
+        partitioner
+      )
+      .cache()
+    val actual = actualRDD.collect()
+    val expected =
+      Array("key1" -> -10, "key1" -> -20, "key2" -> 30, "key2" -> 40)
+    expected contains theSameElementsInOrderAs(actual)
+    assert(actualRDD.getNumPartitions == 3)
+    actualRDD.unpersist(false)
+  }
+
+  test(
+    "mapValuesWithKeyedResource pairs the right resource to the right values and applies the operation"
+  ) {
+    val resources =
+      Seq("key1" -> Map(1 -> 10, 2 -> 20), "key2" -> Map(3 -> -30, 4 -> -40))
+    val resourcesRDD = sc.parallelize(resources)
+    val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
+    val dataRDD = sc.parallelize(data)
+    val partitioner = new RangePartitioner(3, dataRDD, true)
+    val actualRDD = dataRDD
+      .mapValuesWithKeyedResource(
+        resourcesRDD,
+        (r: Map[Int, Int], v: Int) => r(v),
+        partitioner
+      )
+      .cache()
+    val actual = actualRDD.collect()
+    val expected =
+      Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
+    expected contains theSameElementsInOrderAs(actual)
+    assert(actualRDD.getNumPartitions == 3)
+    actualRDD.unpersist(false)
+  }
+
   test("fullOuterJoinWithSortedValues joins 4 RDDs as expected") {
     val rdd1 = sc.parallelize(Seq(
       "a" -> "rdd1-a", "b" -> "rdd1-b", "d" -> "rdd1-d1", "d" -> "rdd1-d2"
