@@ -1,6 +1,6 @@
 package cwienberg.spark.sorting
 
-import RDDSortingHelpers._
+import SecondarySortGroupingPairRDDFunctions.rddToSecondarySortGroupingPairRDDFunctions
 import org.apache.spark.{HashPartitioner, RangePartitioner, SparkException}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -10,7 +10,7 @@ import scala.util.Random
 
 case class GroupByTestObject(group: String, value: Int)
 
-class RDDSortingHelpersTest
+class SecondarySortGroupingPairRDDFunctionsTest
     extends AnyFunSuite
     with Matchers
     with SparkTestingMixin {
