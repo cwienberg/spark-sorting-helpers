@@ -1123,8 +1123,14 @@ private object SecondarySortGroupingPairRDDFunctions {
     partitioner: Partitioner
   ): RDD[(K, V)] = {
     rdd
-      .map(SecondarySortKey(_))
-      .map((_, ()))
+      .mapPartitions(
+        partition => {
+          partition.map { case (key, value) =>
+            (SecondarySortKey(key, value), ())
+          }
+        },
+        preservesPartitioning = true
+      )
       .repartitionAndSortWithinPartitions(
         new SecondarySortPartitioner(partitioner)
       )
