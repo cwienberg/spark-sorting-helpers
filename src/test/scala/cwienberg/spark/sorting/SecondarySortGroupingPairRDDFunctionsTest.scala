@@ -1,7 +1,7 @@
 package cwienberg.spark.sorting
 
 import SecondarySortGroupingPairRDDFunctions.rddToSecondarySortGroupingPairRDDFunctions
-import org.apache.spark.{HashPartitioner, RangePartitioner, SparkException}
+import org.apache.spark.{HashPartitioner, SparkException}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -56,7 +56,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
       value <- 0.until(100)
     } yield (key, value * key)
     val rdd = sc.parallelize(rand.shuffle(input), 5)
-    val partitioner = new RangePartitioner[Int, Int](3, rdd, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = rdd.sortedGroupByKey(partitioner).cache()
     val actual = actualRDD.collectAsMap()
     assert(actual.size == 3)
@@ -123,7 +123,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val rdd = sc.parallelize(rand.shuffle(input))
-    val partitioner = new RangePartitioner[String, Int](3, rdd, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = rdd
       .sortedFoldLeftByKey(
         Queue.empty[Int],
@@ -154,29 +154,50 @@ class SecondarySortGroupingPairRDDFunctionsTest
   }
 
   test("mapValuesWithKeyedPreparedResource fails when a key has no resources") {
-    val resources = Seq("key1" -> Map.empty[String, Int])
-    val resourcesRDD = sc.parallelize(resources)
-    val data = Seq(("key1", ()), ("key2", ()))
-    val dataRDD = sc.parallelize(data)
+    val dataRDD = sc.parallelize(Seq(("key1", ()), ("key2", ())))
+    val resources1 = sc.parallelize(Seq("key1" -> Map.empty[String, Int]))
     assertThrows[SparkException] {
       dataRDD
         .mapValuesWithKeyedPreparedResource(
-          resourcesRDD,
-          (r: Map[String, Int]) => (_: Unit) => r
+          resources1,
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
+        )
+        .collect()
+    }
+
+    val resources2 = sc.parallelize(Seq("key2" -> Map.empty[String, Int]))
+    assertThrows[SparkException] {
+      dataRDD
+        .mapValuesWithKeyedPreparedResource(
+          resources2,
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
         )
         .collect()
     }
   }
 
   test("mapValuesWithKeyedPreparedResource fails when a key has no values") {
-    val resources = Seq("key1" -> Map.empty[String, Int])
-    val resourcesRDD = sc.parallelize(resources)
-    val dataRDD = sc.emptyRDD[(String, Unit)]
+    val resourcesRDD = sc.parallelize(Seq("key1" -> Map.empty[String, Int], "key2" -> Map.empty[String, Int]))
+    val data1 = sc.parallelize(Seq(("key1", ())))
     assertThrows[SparkException] {
-      dataRDD
+      data1
         .mapValuesWithKeyedPreparedResource(
           resourcesRDD,
-          (r: Map[String, Int]) => (_: Unit) => r
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
+        )
+        .collect()
+    }
+
+    val data2 = sc.parallelize(Seq(("key2", ())))
+    assertThrows[SparkException] {
+      data2
+        .mapValuesWithKeyedPreparedResource(
+          resourcesRDD,
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
         )
         .collect()
     }
@@ -232,7 +253,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
-    val partitioner = new RangePartitioner(3, dataRDD, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = dataRDD
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
@@ -256,21 +277,38 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
-    val partitioner = new RangePartitioner(3, dataRDD, true)
-    val actualRDD = dataRDD
+
+    val expected =
+      Array("key1" -> -10, "key1" -> -20, "key2" -> 30, "key2" -> 40)
+
+    val actualWithPartitioner = dataRDD
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
         (r: Map[Int, Int]) => r.mapValues(v => -v),
         (r: Map[Int, Int], v: Int) => r(v),
-        partitioner
+        new HashPartitioner(3)
       )
-      .cache()
-    val actual = actualRDD.collect()
-    val expected =
-      Array("key1" -> -10, "key1" -> -20, "key2" -> 30, "key2" -> 40)
-    expected contains theSameElementsInOrderAs(actual)
-    assert(actualRDD.getNumPartitions == 3)
-    actualRDD.unpersist(false)
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithPartitioner)
+
+    val actualWithNumPartitions = dataRDD
+      .mapValuesWithKeyedPreparedResource(
+        resourcesRDD,
+        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int], v: Int) => r(v),
+        3
+      )
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithNumPartitions)
+
+    val actualWithDefaultPartitioner = dataRDD
+      .mapValuesWithKeyedPreparedResource(
+        resourcesRDD,
+        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int], v: Int) => r(v)
+      )
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithDefaultPartitioner)
   }
 
   test(
@@ -281,19 +319,34 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
-    val partitioner = new RangePartitioner(3, dataRDD, true)
-    val actualRDD = dataRDD
+
+    val expected =
+      Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
+
+    val actualWithPartitioner = dataRDD
       .mapValuesWithKeyedResource(
         resourcesRDD,
         (r: Map[Int, Int], v: Int) => r(v),
-        partitioner
+        new HashPartitioner(3)
       )
-      .cache()
-    val actual = actualRDD.collect()
-    val expected =
-      Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
-    expected contains theSameElementsInOrderAs(actual)
-    assert(actualRDD.getNumPartitions == 3)
-    actualRDD.unpersist(false)
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithPartitioner)
+
+    val actualWithNumPartitions = dataRDD
+      .mapValuesWithKeyedResource(
+        resourcesRDD,
+        (r: Map[Int, Int], v: Int) => r(v),
+        3
+      )
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithNumPartitions)
+
+    val actualWithDefaultPartitioner = dataRDD
+      .mapValuesWithKeyedResource(
+        resourcesRDD,
+        (r: Map[Int, Int], v: Int) => r(v)
+      )
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithDefaultPartitioner)
   }
 }
