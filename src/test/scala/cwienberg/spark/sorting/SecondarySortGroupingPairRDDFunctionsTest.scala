@@ -154,29 +154,50 @@ class SecondarySortGroupingPairRDDFunctionsTest
   }
 
   test("mapValuesWithKeyedPreparedResource fails when a key has no resources") {
-    val resources = Seq("key1" -> Map.empty[String, Int])
-    val resourcesRDD = sc.parallelize(resources)
-    val data = Seq(("key1", ()), ("key2", ()))
-    val dataRDD = sc.parallelize(data)
+    val dataRDD = sc.parallelize(Seq(("key1", ()), ("key2", ())))
+    val resources1 = sc.parallelize(Seq("key1" -> Map.empty[String, Int]))
     assertThrows[SparkException] {
       dataRDD
         .mapValuesWithKeyedPreparedResource(
-          resourcesRDD,
-          (r: Map[String, Int]) => (_: Unit) => r
+          resources1,
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
+        )
+        .collect()
+    }
+
+    val resources2 = sc.parallelize(Seq("key2" -> Map.empty[String, Int]))
+    assertThrows[SparkException] {
+      dataRDD
+        .mapValuesWithKeyedPreparedResource(
+          resources2,
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
         )
         .collect()
     }
   }
 
   test("mapValuesWithKeyedPreparedResource fails when a key has no values") {
-    val resources = Seq("key1" -> Map.empty[String, Int])
-    val resourcesRDD = sc.parallelize(resources)
-    val dataRDD = sc.emptyRDD[(String, Unit)]
+    val resourcesRDD = sc.parallelize(Seq("key1" -> Map.empty[String, Int], "key2" -> Map.empty[String, Int]))
+    val data1 = sc.parallelize(Seq(("key1", ())))
     assertThrows[SparkException] {
-      dataRDD
+      data1
         .mapValuesWithKeyedPreparedResource(
           resourcesRDD,
-          (r: Map[String, Int]) => (_: Unit) => r
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
+        )
+        .collect()
+    }
+
+    val data2 = sc.parallelize(Seq(("key2", ())))
+    assertThrows[SparkException] {
+      data2
+        .mapValuesWithKeyedPreparedResource(
+          resourcesRDD,
+          (r: Map[String, Int]) => (_: Unit) => r,
+          1
         )
         .collect()
     }
