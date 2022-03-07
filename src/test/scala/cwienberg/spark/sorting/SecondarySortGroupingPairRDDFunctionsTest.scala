@@ -1,7 +1,7 @@
 package cwienberg.spark.sorting
 
 import SecondarySortGroupingPairRDDFunctions.rddToSecondarySortGroupingPairRDDFunctions
-import org.apache.spark.{HashPartitioner, RangePartitioner, SparkException}
+import org.apache.spark.{HashPartitioner, SparkException}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -56,7 +56,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
       value <- 0.until(100)
     } yield (key, value * key)
     val rdd = sc.parallelize(rand.shuffle(input), 5)
-    val partitioner = new RangePartitioner[Int, Int](3, rdd, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = rdd.sortedGroupByKey(partitioner).cache()
     val actual = actualRDD.collectAsMap()
     assert(actual.size == 3)
@@ -123,7 +123,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val rdd = sc.parallelize(rand.shuffle(input))
-    val partitioner = new RangePartitioner[String, Int](3, rdd, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = rdd
       .sortedFoldLeftByKey(
         Queue.empty[Int],
@@ -232,7 +232,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
-    val partitioner = new RangePartitioner(3, dataRDD, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = dataRDD
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
@@ -256,7 +256,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
-    val partitioner = new RangePartitioner(3, dataRDD, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = dataRDD
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
@@ -281,7 +281,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
-    val partitioner = new RangePartitioner(3, dataRDD, true)
+    val partitioner = new HashPartitioner(3)
     val actualRDD = dataRDD
       .mapValuesWithKeyedResource(
         resourcesRDD,
