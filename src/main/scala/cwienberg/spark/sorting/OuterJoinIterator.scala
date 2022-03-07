@@ -78,7 +78,7 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
           c <- cs
           d <- ds
         } yield (a, b, c, d)
-      case _ => throw new RuntimeException(s"Issue with key ${minKey}")
+      case _ => throw new RuntimeException(s"Issue with key $minKey")
     }
     nextGroupIterator = iter.map(value => minKey -> value)
   }

@@ -9,10 +9,11 @@ private[sorting] class SecondarySortPartitioner(partitioner: Partitioner)
   override def numPartitions: Int = partitioner.numPartitions
 
   override def getPartition(key: Any): Int = {
-    if (key.isInstanceOf[SecondarySortKey[_, _]]) {
-      partitioner.getPartition(key.asInstanceOf[SecondarySortKey[_, _]].key)
-    } else {
-      partitioner.getPartition(key)
+    key match {
+      case value: SecondarySortKey[_, _] =>
+        partitioner.getPartition(value.key)
+      case _ =>
+        partitioner.getPartition(key)
     }
   }
 
