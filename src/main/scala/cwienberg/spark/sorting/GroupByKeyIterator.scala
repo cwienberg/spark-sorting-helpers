@@ -6,7 +6,7 @@ private[sorting] class GroupByKeyIterator[K, V](iter: Iterator[(K, V)])
   private var prevIterator: Option[Iterator[V]] = None
 
   private def prevIteratorHasElements: Boolean =
-    prevIterator.map(_.hasNext).getOrElse(false)
+    prevIterator.exists(_.hasNext)
 
   private def failIfPrevIteratorUnexhasuted(): Unit = {
     if (prevIteratorHasElements)
