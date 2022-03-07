@@ -13,4 +13,12 @@ object implicits {
     SecondarySortGroupingPairRDDFunctions
       .rddToSecondarySortGroupingPairRDDFunctions(rdd)
   }
+
+  implicit def rddToSecondarySortJoiningPairRDDFunctions[
+    K: Ordering: ClassTag,
+    V: Ordering: ClassTag
+  ](rdd: RDD[(K, V)]): SecondarySortJoiningPairRDDFunctions[K, V] = {
+    SecondarySortJoiningPairRDDFunctions
+      .rddToSecondarySortJoiningPairRDDFunctions(rdd)
+  }
 }
