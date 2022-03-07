@@ -298,19 +298,34 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val resourcesRDD = sc.parallelize(resources)
     val data = Seq("key1" -> 1, "key1" -> 2, "key2" -> 3, "key2" -> 4)
     val dataRDD = sc.parallelize(data)
-    val partitioner = new HashPartitioner(3)
-    val actualRDD = dataRDD
+
+    val expected =
+      Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
+
+    val actualWithPartitioner = dataRDD
       .mapValuesWithKeyedResource(
         resourcesRDD,
         (r: Map[Int, Int], v: Int) => r(v),
-        partitioner
+        new HashPartitioner(3)
       )
-      .cache()
-    val actual = actualRDD.collect()
-    val expected =
-      Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
-    expected contains theSameElementsInOrderAs(actual)
-    assert(actualRDD.getNumPartitions == 3)
-    actualRDD.unpersist(false)
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithPartitioner)
+
+    val actualWithNumPartitions = dataRDD
+      .mapValuesWithKeyedResource(
+        resourcesRDD,
+        (r: Map[Int, Int], v: Int) => r(v),
+        3
+      )
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithNumPartitions)
+
+    val actualWithDefaultPartitioner = dataRDD
+      .mapValuesWithKeyedResource(
+        resourcesRDD,
+        (r: Map[Int, Int], v: Int) => r(v)
+      )
+      .collect()
+    expected contains theSameElementsInOrderAs(actualWithDefaultPartitioner)
   }
 }
