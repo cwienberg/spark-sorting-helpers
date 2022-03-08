@@ -1,4 +1,4 @@
-package cwienberg.spark.sorting
+package net.gonzberg.spark.sorting
 
 import org.apache.spark.HashPartitioner
 import org.scalatest.funsuite.AnyFunSuite

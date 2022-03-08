@@ -1,9 +1,6 @@
-package cwienberg.spark.sorting
+package net.gonzberg.spark.sorting
 
-import cwienberg.spark.sorting.SortHelpers.{
-  modifyResourcePreparationAndOp,
-  repartitionAndSort
-}
+import SortHelpers.{modifyResourcePreparationAndOp, repartitionAndSort}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{HashPartitioner, Partitioner}
 

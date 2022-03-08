@@ -1,4 +1,4 @@
-package cwienberg.spark.sorting
+package net.gonzberg.spark.sorting
 
 private[sorting] class GroupByKeyIterator[K, V](iter: Iterator[(K, V)])
     extends Iterator[(K, Iterator[V])] {

@@ -4,7 +4,7 @@ lazy val supportedScalaVersions = List(scala212, scala211)
 
 lazy val scalatestVersion = "3.2.0"
 
-ThisBuild / organization := "cwienberg"
+ThisBuild / organization := "net.gonzberg"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := scala212
 
