@@ -1,4 +1,4 @@
-package cwienberg.spark.sorting
+package net.gonzberg.spark.sorting
 
 import SecondarySortGroupingPairRDDFunctions.rddToSecondarySortGroupingPairRDDFunctions
 import org.apache.spark.{HashPartitioner, SparkException}

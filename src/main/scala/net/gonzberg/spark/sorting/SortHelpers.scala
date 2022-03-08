@@ -1,4 +1,4 @@
-package cwienberg.spark.sorting
+package net.gonzberg.spark.sorting
 
 import org.apache.spark.Partitioner
 import org.apache.spark.rdd.RDD

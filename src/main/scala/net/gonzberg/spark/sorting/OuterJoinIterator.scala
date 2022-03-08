@@ -1,4 +1,4 @@
-package cwienberg.spark.sorting
+package net.gonzberg.spark.sorting
 
 private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
   iterA: GroupByKeyIterator[K, A],
