@@ -1,6 +1,6 @@
 package net.gonzberg.spark.sorting
 
-import SortHelpers.{modifyResourcePreparationAndOp, repartitionAndSort}
+import SortHelpers._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{HashPartitioner, Partitioner}
 
@@ -8,12 +8,10 @@ import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 final class SecondarySortGroupingPairRDDFunctions[
-  K: ClassTag,
+  K: Ordering: ClassTag,
   V: Ordering: ClassTag
-](rdd: RDD[(K, V)])(implicit keyOrdering: Ordering[K])
+](rdd: RDD[(K, V)])
     extends Serializable {
-
-  import keyOrdering.mkOrderingOps
 
   private def defaultPartitioner: Partitioner =
     Partitioner.defaultPartitioner(rdd)
@@ -132,37 +130,7 @@ final class SecondarySortGroupingPairRDDFunctions[
     repartitionedResources.zipPartitions(
       repartitionedValues,
       preservesPartitioning = true
-    ) { (resourcesIter, valuesIter) =>
-      val resourceOptionIter = resourcesIter.map(Some(_))
-      val valueOptionIter = valuesIter.map(Some(_))
-      val zippedValuesAndResources =
-        resourceOptionIter.zipAll(valueOptionIter, None, None)
-      for {
-        (maybeResource, maybeValue) <- zippedValuesAndResources
-        (resourceKey, resource) = maybeResource.getOrElse(
-          throw new IllegalArgumentException(
-            "Must provide a resource for every key"
-          )
-        )
-        (valueKey, values) = maybeValue.getOrElse(
-          throw new IllegalArgumentException(
-            "Must provide a value for every key"
-          )
-        )
-        _ = require(
-          resourceKey >= valueKey,
-          "Must provide a value for every key"
-        )
-        _ = require(
-          resourceKey <= valueKey,
-          "Must provide a resource for every key"
-        )
-        valueFunction = op(resource)
-        value <- values
-      } yield {
-        valueKey -> valueFunction(value)
-      }
-    }
+    )(joinAndApply(op))
   }
 
   /** Applies op to every value with some resource, where values and resources
