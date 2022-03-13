@@ -696,7 +696,7 @@ final class SecondarySortJoiningPairRDDFunctions[
   }
 }
 
-object SecondarySortJoiningPairRDDFunctions {
+private[sorting] object SecondarySortJoiningPairRDDFunctions {
   implicit def rddToSecondarySortJoiningPairRDDFunctions[
     K: Ordering: ClassTag,
     V: Ordering: ClassTag

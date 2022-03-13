@@ -8,6 +8,7 @@ import net.gonzberg.spark.sorting.SortHelpers.{
 import org.apache.spark.{HashPartitioner, Partitioner}
 import org.apache.spark.rdd.RDD
 
+import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
 final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
@@ -431,5 +432,13 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
   ): RDD[(K, A)] = {
     val partitioner = Partitioner.defaultPartitioner(rdd, resources)
     mapValuesWithKeyedResource(resources, op, sortBy, partitioner)
+  }
+}
+
+private[sorting] object GroupAndSortByFunctions {
+  implicit def rddToGrouByAndSortFunctions[K: Ordering: ClassTag, V: ClassTag](
+    rdd: RDD[(K, V)]
+  ): GroupAndSortByFunctions[K, V] = {
+    new GroupAndSortByFunctions(rdd)
   }
 }
