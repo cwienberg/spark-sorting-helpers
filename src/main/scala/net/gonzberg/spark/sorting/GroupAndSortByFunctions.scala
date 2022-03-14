@@ -324,8 +324,8 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
   def mapValuesWithKeyedPreparedResource[R: ClassTag, R1, S: Ordering, A](
     resources: RDD[(K, R)],
     prepareResource: R => R1,
-    sortBy: V => S,
-    op: (R1, V) => A
+    op: (R1, V) => A,
+    sortBy: V => S
   ): RDD[(K, A)] = {
     val partitioner = Partitioner.defaultPartitioner(rdd, resources)
     mapValuesWithKeyedPreparedResource(
@@ -427,8 +427,8 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     */
   def mapValuesWithKeyedResource[R: ClassTag, S: Ordering, A](
     resources: RDD[(K, R)],
-    sortBy: V => S,
-    op: (R, V) => A
+    op: (R, V) => A,
+    sortBy: V => S
   ): RDD[(K, A)] = {
     val partitioner = Partitioner.defaultPartitioner(rdd, resources)
     mapValuesWithKeyedResource(resources, op, sortBy, partitioner)
