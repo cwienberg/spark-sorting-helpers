@@ -32,7 +32,7 @@ class GroupAndSortByFunctionsTest
     assert(actual.keys.toSet == Set(1, 10, 100))
     actual.values.foreach(v => assert(v.size == 100))
     actual.foreach { case (k, values) =>
-      values.zip(0.until(100)).foreach { case (a, b) => a == b * k }
+      values.zip(0.until(100)).foreach { case (a, b) => a.value == b * k }
     }
   }
 
@@ -48,7 +48,7 @@ class GroupAndSortByFunctionsTest
     assert(actual.keys.toSet == Set(1, 10, 100))
     actual.values.foreach(v => assert(v.size == 100))
     actual.foreach { case (k, values) =>
-      values.zip(0.until(100)).foreach { case (a, b) => a == b * k }
+      values.zip(0.until(100)).foreach { case (a, b) => a.value == b * k }
     }
     assert(actualRDD.getNumPartitions == 7)
     actualRDD.unpersist(false)
@@ -67,7 +67,7 @@ class GroupAndSortByFunctionsTest
     assert(actual.keys.toSet == Set(1, 10, 100))
     actual.values.foreach(v => assert(v.size == 100))
     actual.foreach { case (k, values) =>
-      values.zip(0.until(100)).foreach { case (a, b) => a == b * k }
+      values.zip(0.until(100)).foreach { case (a, b) => a.value == b * k }
     }
     assert(actualRDD.getNumPartitions == 3)
     actualRDD.unpersist(false)
@@ -85,7 +85,7 @@ class GroupAndSortByFunctionsTest
     assert(actual.keys.toSet == Set(1, 10, 100, 1000, 10000))
     actual.values.foreach(v => assert(v.size == 100))
     actual.foreach { case (k, values) =>
-      values.zip(0.until(100)).foreach { case (a, b) => a == b * k }
+      values.zip(0.until(100)).foreach { case (a, b) => a.value == b * k }
     }
   }
 
@@ -99,6 +99,7 @@ class GroupAndSortByFunctionsTest
         (q: Queue[TestWrapper[Int]], v: TestWrapper[Int]) => q.enqueue(v),
         _.value
       )
+      .mapValues(_.map(_.value))
       .collectAsMap()
     val expected = Map("key1" -> Queue(1, 2, 3), "key2" -> Queue(4, 5))
     assert(expected == actual)
