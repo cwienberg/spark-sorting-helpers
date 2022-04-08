@@ -18,7 +18,7 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
   private def defaultPartitioner: Partitioner =
     Partitioner.defaultPartitioner(rdd)
 
-  private def groupByKeyAndSortValues[A: Ordering](
+  private def groupByKeyAndSortValuesBy[A: Ordering](
     sortBy: V => A,
     partitioner: Partitioner
   ): RDD[(K, Iterator[V])] = {
@@ -31,11 +31,11 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @param partitioner the partitioner for shuffling
     * @return PairRDD of keys and sorted values
     */
-  def sortedGroupByKey[A: Ordering](
+  def groupByKeyAndSortBy[A: Ordering](
     sortBy: V => A,
     partitioner: Partitioner
   ): RDD[(K, Iterable[V])] = {
-    groupByKeyAndSortValues(sortBy, partitioner).mapValues(_.toVector)
+    groupByKeyAndSortValuesBy(sortBy, partitioner).mapValues(_.toVector)
   }
 
   /** Groups by key and sorts the values by some implicit ordering
@@ -43,20 +43,22 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @param numPartitions the number of partitions for shuffling
     * @return PairRDD of keys and sorted values
     */
-  def sortedGroupByKey[A: Ordering](
+  def groupByKeyAndSortBy[A: Ordering](
     sortBy: V => A,
     numPartitions: Int
   ): RDD[(K, Iterable[V])] = {
     val partitioner = new HashPartitioner(numPartitions)
-    sortedGroupByKey(sortBy, partitioner)
+    groupByKeyAndSortBy(sortBy, partitioner)
   }
 
   /** Groups by key and sorts the values by some implicit ordering
     * @param sortBy how to sort values
     * @return a PairRDD of keys and sorted values
     */
-  def sortedGroupByKey[A: Ordering](sortBy: V => A): RDD[(K, Iterable[V])] = {
-    sortedGroupByKey(sortBy, defaultPartitioner)
+  def groupByKeyAndSortBy[A: Ordering](
+    sortBy: V => A
+  ): RDD[(K, Iterable[V])] = {
+    groupByKeyAndSortBy(sortBy, defaultPartitioner)
   }
 
   /** Groups by key and applies a binary operation using foldLeft
@@ -69,13 +71,13 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD with keys and values, where values are the result
     *         of applying foldLeft across the sorted values
     */
-  def sortedFoldLeftByKey[S: Ordering, A](
+  def foldLeftByKeySortedBy[S: Ordering, A](
     startValue: A,
     op: (A, V) => A,
     sortBy: V => S,
     partitioner: Partitioner
   ): RDD[(K, A)] = {
-    groupByKeyAndSortValues(sortBy, partitioner)
+    groupByKeyAndSortValuesBy(sortBy, partitioner)
       .mapValues(_.foldLeft(startValue)(op))
   }
 
@@ -89,14 +91,14 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD with keys and values, where values are the result
     *         of applying foldLeft across the sorted values
     */
-  def sortedFoldLeftByKey[S: Ordering, A](
+  def foldLeftByKeySortedBy[S: Ordering, A](
     startValue: A,
     op: (A, V) => A,
     sortBy: V => S,
     numPartitions: Int
   ): RDD[(K, A)] = {
     val partitioner = new HashPartitioner(numPartitions)
-    sortedFoldLeftByKey(startValue, op, sortBy, partitioner)
+    foldLeftByKeySortedBy(startValue, op, sortBy, partitioner)
   }
 
   /** Groups by key and applies a binary operation using foldLeft
@@ -108,12 +110,12 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD with keys and values, where values are the result
     *         of applying foldLeft across the sorted values
     */
-  def sortedFoldLeftByKey[S: Ordering, A](
+  def foldLeftByKeySortedBy[S: Ordering, A](
     startValue: A,
     op: (A, V) => A,
     sortBy: V => S
   ): RDD[(K, A)] = {
-    sortedFoldLeftByKey(startValue, op, sortBy, defaultPartitioner)
+    foldLeftByKeySortedBy(startValue, op, sortBy, defaultPartitioner)
   }
 
   /** Applies op to every value with some resource, where values and resources
@@ -139,7 +141,7 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedPreparedResource[R: ClassTag, S: Ordering, A](
+  def mapValuesWithKeyedPreparedResourceSortedBy[R: ClassTag, S: Ordering, A](
     resources: RDD[(K, R)],
     op: R => V => A,
     sortBy: V => S,
@@ -148,7 +150,7 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     val repartitionedResources: RDD[(K, R)] =
       resources.repartitionAndSortWithinPartitions(partitioner)
     val repartitionedValues: RDD[(K, Iterator[V])] =
-      groupByKeyAndSortValues(sortBy, partitioner)
+      groupByKeyAndSortValuesBy(sortBy, partitioner)
     repartitionedResources.zipPartitions(
       repartitionedValues,
       preservesPartitioning = true
@@ -178,14 +180,19 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedPreparedResource[R: ClassTag, S: Ordering, A](
+  def mapValuesWithKeyedPreparedResourceSortedBy[R: ClassTag, S: Ordering, A](
     resources: RDD[(K, R)],
     op: R => V => A,
     sortBy: V => S,
     numPartitions: Int
   ): RDD[(K, A)] = {
     val partitioner = new HashPartitioner(numPartitions)
-    mapValuesWithKeyedPreparedResource(resources, op, sortBy, partitioner)
+    mapValuesWithKeyedPreparedResourceSortedBy(
+      resources,
+      op,
+      sortBy,
+      partitioner
+    )
   }
 
   /** Applies op to every value with some resource, where values and resources
@@ -210,13 +217,18 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedPreparedResource[R: ClassTag, S: Ordering, A](
+  def mapValuesWithKeyedPreparedResourceSortedBy[R: ClassTag, S: Ordering, A](
     resources: RDD[(K, R)],
     op: R => V => A,
     sortBy: V => S
   ): RDD[(K, A)] = {
     val partitioner = Partitioner.defaultPartitioner(rdd, resources)
-    mapValuesWithKeyedPreparedResource(resources, op, sortBy, partitioner)
+    mapValuesWithKeyedPreparedResourceSortedBy(
+      resources,
+      op,
+      sortBy,
+      partitioner
+    )
   }
 
   /** Applies op to every value with some resource, where values and resources
@@ -244,7 +256,12 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedPreparedResource[R: ClassTag, R1, S: Ordering, A](
+  def mapValuesWithKeyedPreparedResourceSortedBy[
+    R: ClassTag,
+    R1,
+    S: Ordering,
+    A
+  ](
     resources: RDD[(K, R)],
     prepareResource: R => R1,
     op: (R1, V) => A,
@@ -252,7 +269,12 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     partitioner: Partitioner
   ): RDD[(K, A)] = {
     val newOp = modifyResourcePreparationAndOp(prepareResource, op)
-    mapValuesWithKeyedPreparedResource(resources, newOp, sortBy, partitioner)
+    mapValuesWithKeyedPreparedResourceSortedBy(
+      resources,
+      newOp,
+      sortBy,
+      partitioner
+    )
   }
 
   /** Applies op to every value with some resource, where values and resources
@@ -280,7 +302,12 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedPreparedResource[R: ClassTag, R1, S: Ordering, A](
+  def mapValuesWithKeyedPreparedResourceSortedBy[
+    R: ClassTag,
+    R1,
+    S: Ordering,
+    A
+  ](
     resources: RDD[(K, R)],
     prepareResource: R => R1,
     op: (R1, V) => A,
@@ -288,7 +315,7 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     numPartitions: Int
   ): RDD[(K, A)] = {
     val partitioner = new HashPartitioner(numPartitions)
-    mapValuesWithKeyedPreparedResource(
+    mapValuesWithKeyedPreparedResourceSortedBy(
       resources,
       prepareResource,
       op,
@@ -321,14 +348,19 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedPreparedResource[R: ClassTag, R1, S: Ordering, A](
+  def mapValuesWithKeyedPreparedResourceSortedBy[
+    R: ClassTag,
+    R1,
+    S: Ordering,
+    A
+  ](
     resources: RDD[(K, R)],
     prepareResource: R => R1,
     op: (R1, V) => A,
     sortBy: V => S
   ): RDD[(K, A)] = {
     val partitioner = Partitioner.defaultPartitioner(rdd, resources)
-    mapValuesWithKeyedPreparedResource(
+    mapValuesWithKeyedPreparedResourceSortedBy(
       resources,
       prepareResource,
       op,
@@ -360,14 +392,19 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedResource[R: ClassTag, S: Ordering, A](
+  def mapValuesWithKeyedResourceSortedBy[R: ClassTag, S: Ordering, A](
     resources: RDD[(K, R)],
     op: (R, V) => A,
     sortBy: V => S,
     partitioner: Partitioner
   ): RDD[(K, A)] = {
     val newOp = modifyResourcePreparationAndOp(identity[R], op)
-    mapValuesWithKeyedPreparedResource(resources, newOp, sortBy, partitioner)
+    mapValuesWithKeyedPreparedResourceSortedBy(
+      resources,
+      newOp,
+      sortBy,
+      partitioner
+    )
   }
 
   /** Applies op to every value with some resource, where values and resources
@@ -393,14 +430,14 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedResource[R: ClassTag, S: Ordering, A](
+  def mapValuesWithKeyedResourceSortedBy[R: ClassTag, S: Ordering, A](
     resources: RDD[(K, R)],
     op: (R, V) => A,
     sortBy: V => S,
     numPartitions: Int
   ): RDD[(K, A)] = {
     val partitioner = new HashPartitioner(numPartitions)
-    mapValuesWithKeyedResource(resources, op, sortBy, partitioner)
+    mapValuesWithKeyedResourceSortedBy(resources, op, sortBy, partitioner)
   }
 
   /** Applies op to every value with some resource, where values and resources
@@ -425,13 +462,13 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
     * @return PairRDD of values transformed by applying the operation with the appropriate
     *         resource
     */
-  def mapValuesWithKeyedResource[R: ClassTag, S: Ordering, A](
+  def mapValuesWithKeyedResourceSortedBy[R: ClassTag, S: Ordering, A](
     resources: RDD[(K, R)],
     op: (R, V) => A,
     sortBy: V => S
   ): RDD[(K, A)] = {
     val partitioner = Partitioner.defaultPartitioner(rdd, resources)
-    mapValuesWithKeyedResource(resources, op, sortBy, partitioner)
+    mapValuesWithKeyedResourceSortedBy(resources, op, sortBy, partitioner)
   }
 }
 
