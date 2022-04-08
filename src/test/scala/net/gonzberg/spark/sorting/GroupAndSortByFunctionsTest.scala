@@ -8,6 +8,12 @@ import org.scalatest.matchers.should.Matchers
 import scala.collection.immutable.Queue
 import scala.util.Random
 
+class TestWrapper[T](val value: T) extends Serializable
+
+object TestWrapper {
+  def apply[T](value: T): TestWrapper[T] = new TestWrapper(value)
+}
+
 class GroupAndSortByFunctionsTest
   extends AnyFunSuite
     with Matchers
@@ -19,9 +25,9 @@ class GroupAndSortByFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100)
       value <- 0.until(100)
-    } yield (key, value * key)
+    } yield (key, TestWrapper(value * key))
     val rdd = sc.parallelize(rand.shuffle(input), 5)
-    val actual = rdd.sortedGroupByKey(identity).collectAsMap()
+    val actual = rdd.sortedGroupByKey((v: TestWrapper[Int]) => v.value).collectAsMap()
     assert(actual.size == 3)
     assert(actual.keys.toSet == Set(1, 10, 100))
     actual.values.foreach(v => assert(v.size == 100))
@@ -34,9 +40,9 @@ class GroupAndSortByFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100)
       value <- 0.until(100)
-    } yield (key, value * key)
+    } yield (key, TestWrapper(value * key))
     val rdd = sc.parallelize(rand.shuffle(input), 5)
-    val actualRDD = rdd.sortedGroupByKey(identity(_), 7).cache()
+    val actualRDD = rdd.sortedGroupByKey((v: TestWrapper[Int]) => v.value, 7).cache()
     val actual = actualRDD.collectAsMap()
     assert(actual.size == 3)
     assert(actual.keys.toSet == Set(1, 10, 100))
@@ -52,10 +58,10 @@ class GroupAndSortByFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100)
       value <- 0.until(100)
-    } yield (key, value * key)
+    } yield (key, TestWrapper(value * key))
     val rdd = sc.parallelize(rand.shuffle(input), 5)
     val partitioner = new HashPartitioner(3)
-    val actualRDD = rdd.sortedGroupByKey(identity(_), partitioner).cache()
+    val actualRDD = rdd.sortedGroupByKey((v: TestWrapper[Int]) => v.value, partitioner).cache()
     val actual = actualRDD.collectAsMap()
     assert(actual.size == 3)
     assert(actual.keys.toSet == Set(1, 10, 100))
@@ -71,10 +77,10 @@ class GroupAndSortByFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100, 1000, 10000)
       value <- 0.until(100)
-    } yield (key, value * key)
+    } yield (key, TestWrapper(value * key))
     val partitioner = new HashPartitioner(3)
     val rdd = sc.parallelize(rand.shuffle(input), 5).partitionBy(partitioner)
-    val actual = rdd.sortedGroupByKey(identity(_), partitioner).collectAsMap()
+    val actual = rdd.sortedGroupByKey((v: TestWrapper[Int]) => v.value, partitioner).collectAsMap()
     assert(actual.size == 5)
     assert(actual.keys.toSet == Set(1, 10, 100, 1000, 10000))
     actual.values.foreach(v => assert(v.size == 100))
@@ -85,13 +91,13 @@ class GroupAndSortByFunctionsTest
 
   test("sortedFoldLeftByKey applies fold as expected") {
     val input =
-      Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
+      Seq(("key1", TestWrapper(1)), ("key1", TestWrapper(2)), ("key1", TestWrapper(3)), ("key2", TestWrapper(4)), ("key2", TestWrapper(5)))
     val rdd = sc.parallelize(rand.shuffle(input))
     val actual = rdd
       .sortedFoldLeftByKey(
-        Queue.empty[Int],
-        (q: Queue[Int], v: Int) => q.enqueue(v),
-        identity(_)
+        Queue.empty[TestWrapper[Int]],
+        (q: Queue[TestWrapper[Int]], v: TestWrapper[Int]) => q.enqueue(v),
+        _.value
       )
       .collectAsMap()
     val expected = Map("key1" -> Queue(1, 2, 3), "key2" -> Queue(4, 5))
@@ -108,7 +114,7 @@ class GroupAndSortByFunctionsTest
       .sortedFoldLeftByKey(
         Queue.empty[Int],
         (q: Queue[Int], v: Int) => q.enqueue(v),
-        identity(_),
+        identity(_: Int),
         7
       )
       .cache()
@@ -128,7 +134,7 @@ class GroupAndSortByFunctionsTest
       .sortedFoldLeftByKey(
         Queue.empty[Int],
         (q: Queue[Int], v: Int) => q.enqueue(v),
-        identity(_),
+        identity(_: Int),
         partitioner
       )
       .cache()
@@ -149,7 +155,7 @@ class GroupAndSortByFunctionsTest
         .mapValuesWithKeyedPreparedResource(
           resourcesRDD,
           (r: Map[String, Int]) => (_: Unit) => r,
-          identity(_)
+          identity(_: Unit)
         )
         .collect()
     }
@@ -163,7 +169,7 @@ class GroupAndSortByFunctionsTest
         .mapValuesWithKeyedPreparedResource(
           resources1,
           (r: Map[String, Int]) => (_: Unit) => r,
-          identity(_),
+          identity(_: Unit),
           1
         )
         .collect()
@@ -175,7 +181,7 @@ class GroupAndSortByFunctionsTest
         .mapValuesWithKeyedPreparedResource(
           resources2,
           (r: Map[String, Int]) => (_: Unit) => r,
-          identity(_),
+          identity(_: Unit),
           1
         )
         .collect()
@@ -190,7 +196,7 @@ class GroupAndSortByFunctionsTest
         .mapValuesWithKeyedPreparedResource(
           resourcesRDD,
           (r: Map[String, Int]) => (_: Unit) => r,
-          identity(_),
+          identity(_: Unit),
           1
         )
         .collect()
@@ -202,7 +208,7 @@ class GroupAndSortByFunctionsTest
         .mapValuesWithKeyedPreparedResource(
           resourcesRDD,
           (r: Map[String, Int]) => (_: Unit) => r,
-          identity(_),
+          identity(_: Unit),
           1
         )
         .collect()
@@ -221,7 +227,7 @@ class GroupAndSortByFunctionsTest
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
         (r: Map[Int, Int]) => (v: Int) => r(v),
-        identity(_)
+        identity(_: Int)
       )
       .collect()
     val expected =
@@ -241,7 +247,7 @@ class GroupAndSortByFunctionsTest
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
         (r: Map[Int, Int]) => (v: Int) => r(v),
-        identity(_),
+        identity(_: Int),
         7
       )
       .cache()
@@ -266,7 +272,7 @@ class GroupAndSortByFunctionsTest
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
         (r: Map[Int, Int]) => (v: Int) => r(v),
-        identity(_),
+        identity(_: Int),
         partitioner
       )
       .cache()
@@ -295,7 +301,7 @@ class GroupAndSortByFunctionsTest
         resourcesRDD,
         (r: Map[Int, Int]) => r.mapValues(v => -v),
         (r: Map[Int, Int], v: Int) => r(v),
-        identity(_),
+        identity(_: Int),
         new HashPartitioner(3)
       )
       .collect()
@@ -306,7 +312,7 @@ class GroupAndSortByFunctionsTest
         resourcesRDD,
         (r: Map[Int, Int]) => r.mapValues(v => -v),
         (r: Map[Int, Int], v: Int) => r(v),
-        identity(_),
+        identity(_: Int),
         3
       )
       .collect()
@@ -317,7 +323,7 @@ class GroupAndSortByFunctionsTest
         resourcesRDD,
         (r: Map[Int, Int]) => r.mapValues(v => -v),
         (r: Map[Int, Int], v: Int) => r(v),
-        identity(_)
+        identity(_: Int)
       )
       .collect()
     expected contains theSameElementsInOrderAs(actualWithDefaultPartitioner)
@@ -339,7 +345,7 @@ class GroupAndSortByFunctionsTest
       .mapValuesWithKeyedResource(
         resourcesRDD,
         (r: Map[Int, Int], v: Int) => r(v),
-        identity(_),
+        identity(_: Int),
         new HashPartitioner(3)
       )
       .collect()
@@ -349,7 +355,7 @@ class GroupAndSortByFunctionsTest
       .mapValuesWithKeyedResource(
         resourcesRDD,
         (r: Map[Int, Int], v: Int) => r(v),
-        identity(_),
+        identity(_: Int),
         3
       )
       .collect()
@@ -359,7 +365,7 @@ class GroupAndSortByFunctionsTest
       .mapValuesWithKeyedResource(
         resourcesRDD,
         (r: Map[Int, Int], v: Int) => r(v),
-        identity(_)
+        identity(_: Int)
       )
       .collect()
     expected contains theSameElementsInOrderAs(actualWithDefaultPartitioner)
