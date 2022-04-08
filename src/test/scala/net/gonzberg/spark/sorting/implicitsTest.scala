@@ -25,4 +25,13 @@ class implicitsTest extends AnyFunSuite with Matchers with SparkTestingMixin {
     val actual = rdd1.innerJoinWithSortedValues(rdd2, numPartitions = 1).collect()
     expected contains theSameElementsInOrderAs(actual)
   }
+
+  test("GroupAndSortByFunctions implicits available") {
+    val rdd = sc.parallelize(
+      Seq("key1" ->"value1", "key1" -> "value2", "key2" -> "value1"), numSlices = 1
+    )
+    val expected = Array("key1" -> Vector("value1", "value2"), "key2" -> Vector("value1"))
+    val actual = rdd.groupByKeyAndSortBy((s: String) => s, numPartitions = 1).collect()
+    expected contains theSameElementsInOrderAs(actual)
+  }
 }
