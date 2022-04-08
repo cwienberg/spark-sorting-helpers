@@ -26,5 +26,5 @@ lazy val core = (project in file("."))
       "org.scalatest" %% "scalatest-funsuite" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest-shouldmatchers" % scalatestVersion % Test
     ),
-    gitHubPagesSiteDir := baseDirectory.value / "doc"
+    gitHubPagesSiteDir := baseDirectory.value / "target" / "scala-2.12" / "api"
   )
