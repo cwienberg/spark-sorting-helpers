@@ -25,9 +25,5 @@ lazy val core = (project in file("."))
       "org.apache.spark" %% "spark-core" % "2.4.6" % Provided,
       "org.scalatest" %% "scalatest-funsuite" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest-shouldmatchers" % scalatestVersion % Test
-    ),
-    gitHubPagesOrgName := "cwienberg",
-    gitHubPagesRepoName := "cwienberg.github.io",
-    gitHubPagesSiteDir := baseDirectory.value / "doc/spark-sorting-helpers",
-    gitHubPagesBranch := "main"
+    )
   )
