@@ -1,6 +1,6 @@
 package net.gonzberg.spark.sorting
 
-import GroupAndSortByFunctions.rddToGrouByAndSortFunctions
+import GroupAndSortByFunctions.rddToGroupByAndSortFunctions
 import org.apache.spark.{HashPartitioner, SparkException}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers

@@ -436,7 +436,7 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
 }
 
 private[sorting] object GroupAndSortByFunctions {
-  implicit def rddToGrouByAndSortFunctions[K: Ordering: ClassTag, V: ClassTag](
+  implicit def rddToGroupByAndSortFunctions[K: Ordering: ClassTag, V: ClassTag](
     rdd: RDD[(K, V)]
   ): GroupAndSortByFunctions[K, V] = {
     new GroupAndSortByFunctions(rdd)
