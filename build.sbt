@@ -28,5 +28,6 @@ lazy val core = (project in file("."))
     ),
     gitHubPagesOrgName := "cwienberg",
     gitHubPagesRepoName := "cwienberg.github.io",
-    gitHubPagesSiteDir := baseDirectory.value / "doc/spark-sorting-helpers"
+    gitHubPagesSiteDir := baseDirectory.value / "doc/spark-sorting-helpers",
+    gitHubPagesBranch := "main"
   )
