@@ -20,7 +20,7 @@ jobs:
     - name: Test
       run: sbt +test
     - name: Test Coverage
-      run: sbt test coverage
+      run: sbt coverage test
     - name: Coverage Report
       run: sbt coverageReport
     - name: Upload coverage to Codecov
