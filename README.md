@@ -21,3 +21,7 @@ groupedRDD.foreach((k, group) => assert group == group.sorted)
 ## Documentation
 
 Scaladocs are avaiable [here](https://cwienberg.github.io/spark-sorting-helpers/).
+
+## Development
+
+This package is built using `sbt`. You can run the tests with `sbt test`.
