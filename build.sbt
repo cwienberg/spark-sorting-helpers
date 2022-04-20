@@ -2,6 +2,7 @@ lazy val scala212 = "2.12.10"
 lazy val scala211 = "2.11.12"
 lazy val supportedScalaVersions = List(scala212, scala211)
 
+lazy val sparkVersion = "2.4.8"
 lazy val scalatestVersion = "3.2.0"
 
 ThisBuild / organization := "net.gonzberg"
