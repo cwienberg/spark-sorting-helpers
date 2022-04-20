@@ -1,8 +1,8 @@
+lazy val scala213 = "2.13.8"
 lazy val scala212 = "2.12.10"
-lazy val scala211 = "2.11.12"
-lazy val supportedScalaVersions = List(scala212, scala211)
+lazy val supportedScalaVersions = List(scala213, scala212)
 
-lazy val sparkVersion = "2.4.8"
+lazy val sparkVersion = "3.2.0"
 lazy val scalatestVersion = "3.2.0"
 
 ThisBuild / scalaVersion := scala212

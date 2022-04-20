@@ -1,6 +1,8 @@
 package net.gonzberg.spark.sorting
 
-private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
+import scala.reflect.ClassTag
+
+private[sorting] class OuterJoinIterator[K: Ordering: ClassTag, A, B, C, D](
   iterA: GroupByKeyIterator[K, A],
   iterB: GroupByKeyIterator[K, B],
   iterC: GroupByKeyIterator[K, C],
@@ -98,7 +100,7 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
 }
 
 private[sorting] object OuterJoinIterator {
-  def apply[K: Ordering, A, B, C, D](
+  def apply[K: Ordering: ClassTag, A, B, C, D](
     iterA: Iterator[(K, A)],
     iterB: Iterator[(K, B)],
     iterC: Iterator[(K, C)],
@@ -112,7 +114,7 @@ private[sorting] object OuterJoinIterator {
     )
   }
 
-  def apply[K: Ordering, A, B, C](
+  def apply[K: Ordering: ClassTag, A, B, C](
     iterA: Iterator[(K, A)],
     iterB: Iterator[(K, B)],
     iterC: Iterator[(K, C)]
@@ -127,7 +129,7 @@ private[sorting] object OuterJoinIterator {
     }
   }
 
-  def apply[K: Ordering, A, B](
+  def apply[K: Ordering: ClassTag, A, B](
     iterA: Iterator[(K, A)],
     iterB: Iterator[(K, B)]
   ): Iterator[(K, (Option[A], Option[B]))] = {
