@@ -5,9 +5,20 @@ lazy val supportedScalaVersions = List(scala212, scala211)
 lazy val sparkVersion = "2.4.8"
 lazy val scalatestVersion = "3.2.0"
 
-ThisBuild / organization := "net.gonzberg"
-ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := scala212
+ThisBuild / organization := "net.gonzberg"
+ThisBuild / homepage := Some(url("https://github.com/cwienberg/spark-sorting-helpers"))
+ThisBuild / licenses := List("MIT" -> url("http://opensource.org/licenses/MIT"))
+ThisBuild / developers := List(
+  Developer(
+    "cwienberg",
+    "Christopher González Wienberg",
+    "christopher@gonzberg.net",
+    url("https://gonzberg.net")
+  )
+)
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 
 enablePlugins(GitHubPagesPlugin)
 
