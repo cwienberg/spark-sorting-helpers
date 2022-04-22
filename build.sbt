@@ -1,7 +1,7 @@
 lazy val scala213 = "2.13.8"
 lazy val scala212 = "2.12.10"
 lazy val supportedScalaVersions = List(scala213, scala212)
-lazy val primaryScalaVersion = scala212
+lazy val primaryScalaVersion = scala213
 lazy val primaryScalaMinorVersion = primaryScalaVersion.split("\\.").slice(0,2).mkString(".")
 
 lazy val sparkVersion = "3.2.1"
