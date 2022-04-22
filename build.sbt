@@ -1,11 +1,12 @@
 lazy val scala213 = "2.13.8"
 lazy val scala212 = "2.12.10"
 lazy val supportedScalaVersions = List(scala213, scala212)
+lazy val primaryScalaVersion = scala212
+lazy val primaryScalaMinorVersion = primaryScalaVersion.split("\\.").slice(0,2).mkString(".")
 
-lazy val sparkVersion = "3.2.0"
-lazy val scalatestVersion = "3.2.0"
+lazy val sparkVersion = "3.2.1"
+lazy val scalatestVersion = "3.2.11"
 
-ThisBuild / scalaVersion := scala212
 ThisBuild / organization := "net.gonzberg"
 ThisBuild / homepage := Some(url("https://github.com/cwienberg/spark-sorting-helpers"))
 ThisBuild / licenses := List("MIT" -> url("http://opensource.org/licenses/MIT"))
@@ -19,6 +20,8 @@ ThisBuild / developers := List(
 )
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+ThisBuild / organization := "net.gonzberg"
+ThisBuild / scalaVersion := primaryScalaVersion
 
 enablePlugins(GitHubPagesPlugin)
 
@@ -38,5 +41,5 @@ lazy val core = (project in file("."))
       "org.scalatest" %% "scalatest-funsuite" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest-shouldmatchers" % scalatestVersion % Test
     ),
-    gitHubPagesSiteDir := baseDirectory.value / "target" / "scala-2.12" / "api"
+    gitHubPagesSiteDir := baseDirectory.value / "target" / s"scala-${primaryScalaMinorVersion}" / "api"
   )
