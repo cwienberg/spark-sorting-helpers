@@ -3,6 +3,7 @@ package net.gonzberg.spark.sorting
 import org.apache.spark.HashPartitioner
 import org.scalatest.funsuite.AnyFunSuite
 
+import scala.collection.compat._
 import scala.math.Ordered.orderingToOrdered
 
 class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
@@ -14,7 +15,7 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     val repartitionedRDD = SortHelpers.repartitionAndSort(rdd, new HashPartitioner(1))
     repartitionedRDD.foreachPartition { partition =>
       val keys = partition.map(_._1).toVector
-      assert((keys, keys.tail).zipped.forall(_ <= _))
+      assert(keys.lazyZip(keys.tail).forall(_ <= _))
     }
   }
 
@@ -26,7 +27,7 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     val repartitionedRDD = SortHelpers.repartitionAndSort(rdd, new HashPartitioner(1))
     repartitionedRDD.foreachPartition { partition =>
       val partitionVector = partition.toVector
-      assert((partitionVector, partitionVector.tail).zipped.forall(_ <= _))
+      assert(partitionVector.lazyZip(partitionVector.tail).forall(_ <= _))
     }
   }
 
@@ -38,7 +39,7 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     val repartitionedRDD = SortHelpers.repartitionAndSort(rdd, (p: (Int, String)) => p._2, new HashPartitioner(1))
     repartitionedRDD.foreachPartition { partition =>
       val partitionVectorWithOnlySortedByValues = partition.map {case (key, (_, sortedValue)) => (key, sortedValue)}.toVector
-      assert((partitionVectorWithOnlySortedByValues, partitionVectorWithOnlySortedByValues.tail).zipped.forall(_ <= _))
+      assert(partitionVectorWithOnlySortedByValues.lazyZip(partitionVectorWithOnlySortedByValues.tail).forall(_ <= _))
     }
   }
 
@@ -67,10 +68,10 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     val operation = (resource: Map[String, Int]) => (value: String) => resource(value)
     val values = Vector("key1" -> Iterator("lookup1", "lookup2"), "key2" -> Iterator("lookup3", "lookup4"))
     assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndApply(operation)(Iterator("key1" -> Map("lookup1" -> 1, "lookup2" -> 2)), values.toIterator).foreach(identity)
+      SortHelpers.joinAndApply(operation)(Iterator("key1" -> Map("lookup1" -> 1, "lookup2" -> 2)), values.iterator).foreach(identity)
     }
     assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndApply(operation)(Iterator("key2" -> Map("lookup3" -> 3, "lookup4" -> 4)), values.toIterator).foreach(identity)
+      SortHelpers.joinAndApply(operation)(Iterator("key2" -> Map("lookup3" -> 3, "lookup4" -> 4)), values.iterator).foreach(identity)
     }
   }
 
@@ -78,10 +79,10 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     val operation = (resource: Map[String, Int]) => (value: String) => resource(value)
     val resources = Vector("key1" -> Map("lookup1" -> 1, "lookup2" -> 2), "key2" -> Map("lookup3" -> 3, "lookup4" -> 4))
     assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndApply(operation)(resources.toIterator, Iterator("key1" -> Iterator("lookup1", "lookup2"))).foreach(identity)
+      SortHelpers.joinAndApply(operation)(resources.iterator, Iterator("key1" -> Iterator("lookup1", "lookup2"))).foreach(identity)
     }
     assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndApply(operation)(resources.toIterator, Iterator("key2" -> Iterator("lookup3", "lookup4"))).foreach(identity)
+      SortHelpers.joinAndApply(operation)(resources.iterator, Iterator("key2" -> Iterator("lookup3", "lookup4"))).foreach(identity)
     }
   }
 }

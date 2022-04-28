@@ -1,5 +1,5 @@
 lazy val scala213 = "2.13.8"
-lazy val scala212 = "2.12.10"
+lazy val scala212 = "2.12.15"
 lazy val supportedScalaVersions = List(scala213, scala212)
 lazy val primaryScalaVersion = scala213
 lazy val primaryScalaMinorVersion = primaryScalaVersion.split("\\.").slice(0,2).mkString(".")
@@ -38,6 +38,7 @@ lazy val core = (project in file("."))
     ),
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % sparkVersion % Provided,
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0",
       "org.scalatest" %% "scalatest-funsuite" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest-shouldmatchers" % scalatestVersion % Test
     ),
