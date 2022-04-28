@@ -1,5 +1,7 @@
 package net.gonzberg.spark.sorting
 
+import scala.collection.BufferedIterator
+
 private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
   iterA: GroupByKeyIterator[K, A],
   iterB: GroupByKeyIterator[K, B],
@@ -37,13 +39,13 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
   }
 
   private def setNextGroupIterator(): Unit = {
-    val (nextA, nextB, nextC, nextD) = (
-      iterHeadOption(bufferedIterA),
-      iterHeadOption(bufferedIterB),
-      iterHeadOption(bufferedIterC),
-      iterHeadOption(bufferedIterD)
+    val maybeKeys = Seq(
+      iterHeadOption(bufferedIterA).map(_._1),
+      iterHeadOption(bufferedIterB).map(_._1),
+      iterHeadOption(bufferedIterC).map(_._1),
+      iterHeadOption(bufferedIterD).map(_._1)
     )
-    val minKey = Array(nextA, nextB, nextC, nextD).flatten.map(_._1).min
+    val minKey = maybeKeys.flatten.min
     val iter = (
       prepareForNextGroupIterator(bufferedIterA, minKey),
       prepareForNextGroupIterator(bufferedIterB, minKey),
@@ -55,23 +57,23 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
           d <- ds
         } yield (None, None, None, d)
       case (None, None, Some(cs), maybeDs) =>
-        val ds = maybeDs.getOrElse(Iterator(None)).toStream
+        val ds = maybeDs.getOrElse(Iterator(None)).toSeq
         for {
           c <- cs
           d <- ds
         } yield (None, None, c, d)
       case (None, Some(bs), maybeCs, maybeDs) =>
-        val cs = maybeCs.getOrElse(Iterator(None)).toStream
-        val ds = maybeDs.getOrElse(Iterator(None)).toStream
+        val cs = maybeCs.getOrElse(Iterator(None)).toSeq
+        val ds = maybeDs.getOrElse(Iterator(None)).toSeq
         for {
           b <- bs
           c <- cs
           d <- ds
         } yield (None, b, c, d)
       case (Some(as), maybeBs, maybeCs, maybeDs) =>
-        val bs = maybeBs.getOrElse(Iterator(None)).toStream
-        val cs = maybeCs.getOrElse(Iterator(None)).toStream
-        val ds = maybeDs.getOrElse(Iterator(None)).toStream
+        val bs = maybeBs.getOrElse(Iterator(None)).toSeq
+        val cs = maybeCs.getOrElse(Iterator(None)).toSeq
+        val ds = maybeDs.getOrElse(Iterator(None)).toSeq
         for {
           a <- as
           b <- bs
