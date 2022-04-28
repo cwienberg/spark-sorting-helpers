@@ -1,9 +1,8 @@
 package net.gonzberg.spark.sorting
 
 import scala.collection.BufferedIterator
-import scala.reflect.ClassTag
 
-private[sorting] class OuterJoinIterator[K: Ordering: ClassTag, A, B, C, D](
+private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
   iterA: GroupByKeyIterator[K, A],
   iterB: GroupByKeyIterator[K, B],
   iterC: GroupByKeyIterator[K, C],
@@ -40,13 +39,13 @@ private[sorting] class OuterJoinIterator[K: Ordering: ClassTag, A, B, C, D](
   }
 
   private def setNextGroupIterator(): Unit = {
-    val (nextA, nextB, nextC, nextD) = (
-      iterHeadOption(bufferedIterA),
-      iterHeadOption(bufferedIterB),
-      iterHeadOption(bufferedIterC),
-      iterHeadOption(bufferedIterD)
+    val maybeKeys = Seq(
+      iterHeadOption(bufferedIterA).map(_._1),
+      iterHeadOption(bufferedIterB).map(_._1),
+      iterHeadOption(bufferedIterC).map(_._1),
+      iterHeadOption(bufferedIterD).map(_._1)
     )
-    val minKey = Array(nextA, nextB, nextC, nextD).flatten.map(_._1).min
+    val minKey = maybeKeys.flatten.min
     val iter = (
       prepareForNextGroupIterator(bufferedIterA, minKey),
       prepareForNextGroupIterator(bufferedIterB, minKey),
@@ -101,7 +100,7 @@ private[sorting] class OuterJoinIterator[K: Ordering: ClassTag, A, B, C, D](
 }
 
 private[sorting] object OuterJoinIterator {
-  def apply[K: Ordering: ClassTag, A, B, C, D](
+  def apply[K: Ordering, A, B, C, D](
     iterA: Iterator[(K, A)],
     iterB: Iterator[(K, B)],
     iterC: Iterator[(K, C)],
@@ -115,7 +114,7 @@ private[sorting] object OuterJoinIterator {
     )
   }
 
-  def apply[K: Ordering: ClassTag, A, B, C](
+  def apply[K: Ordering, A, B, C](
     iterA: Iterator[(K, A)],
     iterB: Iterator[(K, B)],
     iterC: Iterator[(K, C)]
@@ -130,7 +129,7 @@ private[sorting] object OuterJoinIterator {
     }
   }
 
-  def apply[K: Ordering: ClassTag, A, B](
+  def apply[K: Ordering, A, B](
     iterA: Iterator[(K, A)],
     iterB: Iterator[(K, B)]
   ): Iterator[(K, (Option[A], Option[B]))] = {
