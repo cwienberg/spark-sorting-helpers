@@ -1,11 +1,24 @@
 lazy val scala213 = "2.13.8"
 lazy val scala212 = "2.12.15"
 lazy val scala211 = "2.11.12"
-lazy val supportedScalaVersions = List(scala211, scala212)
-lazy val primaryScalaVersion = scala212
-lazy val primaryScalaMinorVersion = primaryScalaVersion.split("\\.").slice(0,2).mkString(".")
+lazy val supportedScalaVersions = List(scala211, scala212, scala213)
+lazy val primaryScalaVersion = scala213
 
-lazy val sparkVersion = "2.4.8"
+def getMinorVersionFromVersion(version: String): String = {
+  version.split("\\.").slice(0,2).mkString(".")
+}
+
+lazy val primaryScalaMinorVersion = getMinorVersionFromVersion(primaryScalaVersion)
+
+def sparkDependency(scalaVersion: String): String = {
+  getMinorVersionFromVersion(scalaVersion) match {
+    case "2.13" => "3.2.1"
+    case "2.12" => "3.2.1"
+    case "2.11" => "2.4.8"
+    case v => throw new RuntimeException(s"Have not defined spark version for scala version $v")
+  }
+}
+
 lazy val scalatestVersion = "3.2.11"
 
 ThisBuild / organization := "net.gonzberg"
@@ -38,10 +51,10 @@ lazy val core = (project in file("."))
       "-Xfatal-warnings"
     ),
     libraryDependencies ++= Seq(
-      "org.apache.spark" %% "spark-core" % sparkVersion % Provided,
+      "org.apache.spark" %% "spark-core" % scalaVersion(sparkDependency(_)).value % Provided,
       "org.scala-lang.modules" %% "scala-collection-compat" % "2.7.0",
       "org.scalatest" %% "scalatest-funsuite" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest-shouldmatchers" % scalatestVersion % Test
     ),
-    gitHubPagesSiteDir := baseDirectory.value / "target" / s"scala-${primaryScalaMinorVersion}" / "api"
+    gitHubPagesSiteDir := baseDirectory.value / "target" / s"scala-$primaryScalaMinorVersion" / "api"
   )
