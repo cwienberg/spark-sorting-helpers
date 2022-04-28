@@ -233,7 +233,7 @@ class GroupAndSortByFunctionsTest
       .collect()
     val expected =
       Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
-    expected contains theSameElementsInOrderAs(actual)
+    expected should contain theSameElementsInOrderAs(actual)
   }
 
   test(
@@ -255,7 +255,7 @@ class GroupAndSortByFunctionsTest
     val actual = actualRDD.collect()
     val expected =
       Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
-    expected contains theSameElementsInOrderAs(actual)
+    expected should contain theSameElementsInOrderAs(actual)
     assert(actualRDD.getNumPartitions == 7)
     actualRDD.unpersist(false)
   }
@@ -280,7 +280,7 @@ class GroupAndSortByFunctionsTest
     val actual = actualRDD.collect()
     val expected =
       Array("key1" -> 10, "key1" -> 20, "key2" -> -30, "key2" -> -40)
-    expected contains theSameElementsInOrderAs(actual)
+    expected should contain theSameElementsInOrderAs(actual)
     assert(actualRDD.getNumPartitions == 3)
     actualRDD.unpersist(false)
   }
@@ -306,7 +306,7 @@ class GroupAndSortByFunctionsTest
         new HashPartitioner(3)
       )
       .collect()
-    expected contains theSameElementsInOrderAs(actualWithPartitioner)
+    expected should contain theSameElementsInOrderAs(actualWithPartitioner)
 
     val actualWithNumPartitions = dataRDD
       .mapValuesWithKeyedPreparedResourceSortedBy(
@@ -317,7 +317,7 @@ class GroupAndSortByFunctionsTest
         3
       )
       .collect()
-    expected contains theSameElementsInOrderAs(actualWithNumPartitions)
+    expected should contain theSameElementsInOrderAs(actualWithNumPartitions)
 
     val actualWithDefaultPartitioner = dataRDD
       .mapValuesWithKeyedPreparedResourceSortedBy(
@@ -327,7 +327,7 @@ class GroupAndSortByFunctionsTest
         identity(_: Int)
       )
       .collect()
-    expected contains theSameElementsInOrderAs(actualWithDefaultPartitioner)
+    expected should contain theSameElementsInOrderAs(actualWithDefaultPartitioner)
   }
 
   test(
@@ -350,7 +350,7 @@ class GroupAndSortByFunctionsTest
         new HashPartitioner(3)
       )
       .collect()
-    expected contains theSameElementsInOrderAs(actualWithPartitioner)
+    expected should contain theSameElementsInOrderAs(actualWithPartitioner)
 
     val actualWithNumPartitions = dataRDD
       .mapValuesWithKeyedResourceSortedBy(
@@ -360,7 +360,7 @@ class GroupAndSortByFunctionsTest
         3
       )
       .collect()
-    expected contains theSameElementsInOrderAs(actualWithNumPartitions)
+    expected should contain theSameElementsInOrderAs(actualWithNumPartitions)
 
     val actualWithDefaultPartitioner = dataRDD
       .mapValuesWithKeyedResourceSortedBy(
@@ -369,6 +369,6 @@ class GroupAndSortByFunctionsTest
         identity(_: Int)
       )
       .collect()
-    expected contains theSameElementsInOrderAs(actualWithDefaultPartitioner)
+    expected should contain theSameElementsInOrderAs(actualWithDefaultPartitioner)
   }
 }
