@@ -1,7 +1,6 @@
 package net.gonzberg.spark.sorting
 
 import scala.collection.BufferedIterator
-import scala.collection.compat.immutable.LazyList
 import scala.reflect.ClassTag
 
 private[sorting] class OuterJoinIterator[K: Ordering: ClassTag, A, B, C, D](
@@ -59,23 +58,23 @@ private[sorting] class OuterJoinIterator[K: Ordering: ClassTag, A, B, C, D](
           d <- ds
         } yield (None, None, None, d)
       case (None, None, Some(cs), maybeDs) =>
-        val ds = maybeDs.getOrElse(Iterator(None)).to(LazyList)
+        val ds = maybeDs.getOrElse(Iterator(None)).toSeq
         for {
           c <- cs
           d <- ds
         } yield (None, None, c, d)
       case (None, Some(bs), maybeCs, maybeDs) =>
-        val cs = maybeCs.getOrElse(Iterator(None)).to(LazyList)
-        val ds = maybeDs.getOrElse(Iterator(None)).to(LazyList)
+        val cs = maybeCs.getOrElse(Iterator(None)).toSeq
+        val ds = maybeDs.getOrElse(Iterator(None)).toSeq
         for {
           b <- bs
           c <- cs
           d <- ds
         } yield (None, b, c, d)
       case (Some(as), maybeBs, maybeCs, maybeDs) =>
-        val bs = maybeBs.getOrElse(Iterator(None)).to(LazyList)
-        val cs = maybeCs.getOrElse(Iterator(None)).to(LazyList)
-        val ds = maybeDs.getOrElse(Iterator(None)).to(LazyList)
+        val bs = maybeBs.getOrElse(Iterator(None)).toSeq
+        val cs = maybeCs.getOrElse(Iterator(None)).toSeq
+        val ds = maybeDs.getOrElse(Iterator(None)).toSeq
         for {
           a <- as
           b <- bs
