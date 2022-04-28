@@ -1,17 +1,17 @@
 lazy val scala213 = "2.13.8"
 lazy val scala212 = "2.12.15"
 lazy val scala211 = "2.11.12"
-lazy val supportedScalaVersions = List(scala211, scala212, scala213)
-lazy val primaryScalaVersion = scala213
+lazy val supportedScalaVersions = List(scala213, scala212, scala211)
 
-def getMinorVersionFromVersion(version: String): String = {
-  version.split("\\.").slice(0,2).mkString(".")
+def getPartialVersion(version: String): String = {
+  CrossVersion.partialVersion(version) match {
+    case Some((major, minor)) => s"$major.$minor"
+    case _ => throw new RuntimeException(s"Have not defined spark version for scala version $version")
+  }
 }
 
-lazy val primaryScalaMinorVersion = getMinorVersionFromVersion(primaryScalaVersion)
-
 def sparkDependency(scalaVersion: String): String = {
-  getMinorVersionFromVersion(scalaVersion) match {
+  getPartialVersion(scalaVersion) match {
     case "2.13" => "3.2.1"
     case "2.12" => "3.2.1"
     case "2.11" => "2.4.8"
@@ -35,7 +35,7 @@ ThisBuild / developers := List(
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 ThisBuild / organization := "net.gonzberg"
-ThisBuild / scalaVersion := primaryScalaVersion
+ThisBuild / scalaVersion := scala213
 
 enablePlugins(GitHubPagesPlugin)
 
@@ -56,5 +56,5 @@ lazy val core = (project in file("."))
       "org.scalatest" %% "scalatest-funsuite" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest-shouldmatchers" % scalatestVersion % Test
     ),
-    gitHubPagesSiteDir := baseDirectory.value / "target" / s"scala-$primaryScalaMinorVersion" / "api"
+    gitHubPagesSiteDir := baseDirectory.value / "target" / s"scala-${scalaVersion(getPartialVersion(_)).value}" / "api"
   )
