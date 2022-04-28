@@ -300,7 +300,7 @@ class GroupAndSortByFunctionsTest
     val actualWithPartitioner = dataRDD
       .mapValuesWithKeyedPreparedResourceSortedBy(
         resourcesRDD,
-        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int]) => r.transform((_, v) => -v),
         (r: Map[Int, Int], v: Int) => r(v),
         identity(_: Int),
         new HashPartitioner(3)
@@ -311,7 +311,7 @@ class GroupAndSortByFunctionsTest
     val actualWithNumPartitions = dataRDD
       .mapValuesWithKeyedPreparedResourceSortedBy(
         resourcesRDD,
-        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int]) => r.transform((_, v) => -v),
         (r: Map[Int, Int], v: Int) => r(v),
         identity(_: Int),
         3
@@ -322,7 +322,7 @@ class GroupAndSortByFunctionsTest
     val actualWithDefaultPartitioner = dataRDD
       .mapValuesWithKeyedPreparedResourceSortedBy(
         resourcesRDD,
-        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int]) => r.transform((_, v) => -v),
         (r: Map[Int, Int], v: Int) => r(v),
         identity(_: Int)
       )

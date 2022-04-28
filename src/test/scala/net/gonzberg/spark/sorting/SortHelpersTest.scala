@@ -43,7 +43,7 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
   }
 
   test("modifyResourcePreparationAndOp combines two functions into a curried function") {
-    val prepareResource = (resource: Map[String, Int]) => resource.mapValues(v => -v)
+    val prepareResource = (resource: Map[String, Int]) => resource.transform((_, v) => -v)
     val op = (resource: Map[String, Int], value: String) => resource(value)
     val preparedOp = SortHelpers.modifyResourcePreparationAndOp(prepareResource, op)
     assert(preparedOp(Map("test" -> 4))("test") == -4)

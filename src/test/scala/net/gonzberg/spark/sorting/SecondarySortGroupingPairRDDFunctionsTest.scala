@@ -284,7 +284,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val actualWithPartitioner = dataRDD
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
-        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int]) => r.transform((_, v) => -v),
         (r: Map[Int, Int], v: Int) => r(v),
         new HashPartitioner(3)
       )
@@ -294,7 +294,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val actualWithNumPartitions = dataRDD
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
-        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int]) => r.transform((_, v) => -v),
         (r: Map[Int, Int], v: Int) => r(v),
         3
       )
@@ -304,7 +304,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val actualWithDefaultPartitioner = dataRDD
       .mapValuesWithKeyedPreparedResource(
         resourcesRDD,
-        (r: Map[Int, Int]) => r.mapValues(v => -v),
+        (r: Map[Int, Int]) => r.transform((_, v) => -v),
         (r: Map[Int, Int], v: Int) => r(v)
       )
       .collect()
