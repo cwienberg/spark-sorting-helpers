@@ -18,6 +18,17 @@ val groupedRDD: RDD[(String, Iterable[Int])] = rdd.sortedGroupByKey
 groupedRDD.foreach((k, group) => assert group == group.sorted)
 ```
 
+## Supported Versions
+This library attempts to support Scala `2.11`, `2.12`, and `2.13`. Since there is not a single version of Spark which supports all three of those Scala versions, this library is built against different versions of Spark depending on the Scala version.
+
+| Scala | Spark |
+| ----- | ----- |
+| 2.11  | 2.4.8 |
+| 2.12  | 3.2.1 |
+| 2.13  | 3.2.1 |
+
+Other combinations of versions may also work, but these are the ones for which the tests run automatically. We will likely drop `2.11` support in a later release, depending on when it becomes too difficult to support.
+
 ## Documentation
 
 Scaladocs are avaiable [here](https://cwienberg.github.io/spark-sorting-helpers/).
