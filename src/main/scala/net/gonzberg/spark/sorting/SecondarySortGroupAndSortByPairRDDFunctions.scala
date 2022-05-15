@@ -11,7 +11,7 @@ import org.apache.spark.rdd.RDD
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
-final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
+final class SecondarySortGroupAndSortByPairRDDFunctions[K: Ordering: ClassTag, V: ClassTag](
   rdd: RDD[(K, V)]
 ) extends Serializable {
 
@@ -472,10 +472,10 @@ final class GroupAndSortByFunctions[K: Ordering: ClassTag, V: ClassTag](
   }
 }
 
-private[sorting] object GroupAndSortByFunctions {
+private[sorting] object SecondarySortGroupAndSortByPairRDDFunctions {
   implicit def rddToGroupByAndSortFunctions[K: Ordering: ClassTag, V: ClassTag](
     rdd: RDD[(K, V)]
-  ): GroupAndSortByFunctions[K, V] = {
-    new GroupAndSortByFunctions(rdd)
+  ): SecondarySortGroupAndSortByPairRDDFunctions[K, V] = {
+    new SecondarySortGroupAndSortByPairRDDFunctions(rdd)
   }
 }

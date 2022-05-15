@@ -22,9 +22,9 @@ object implicits {
       .rddToSecondarySortJoiningPairRDDFunctions(rdd)
   }
 
-  implicit def rddToGroupByAndSortFunctions[K: Ordering: ClassTag, V: ClassTag](
+  implicit def rddToSecondarySortGroupAndSortByPairRDDFunctions[K: Ordering: ClassTag, V: ClassTag](
     rdd: RDD[(K, V)]
-  ): GroupAndSortByFunctions[K, V] = {
-    GroupAndSortByFunctions.rddToGroupByAndSortFunctions(rdd)
+  ): SecondarySortGroupAndSortByPairRDDFunctions[K, V] = {
+    SecondarySortGroupAndSortByPairRDDFunctions.rddToGroupByAndSortFunctions(rdd)
   }
 }
