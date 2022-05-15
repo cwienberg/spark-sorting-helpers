@@ -1,6 +1,6 @@
 package net.gonzberg.spark.sorting
 
-import GroupAndSortByFunctions.rddToGroupByAndSortFunctions
+import SecondarySortGroupAndSortByPairRDDFunctions.rddToSecondarySortGroupAndSortByPairRDDFunctions
 import org.apache.spark.{HashPartitioner, SparkException}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -14,7 +14,7 @@ object TestWrapper {
   def apply[T](value: T): TestWrapper[T] = new TestWrapper(value)
 }
 
-class GroupAndSortByFunctionsTest
+class SecondarySortGroupAndSortByPairRDDFunctionsTest
   extends AnyFunSuite
     with Matchers
     with SparkTestingMixin {
