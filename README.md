@@ -35,4 +35,4 @@ Scaladocs are avaiable [here](https://cwienberg.github.io/spark-sorting-helpers/
 
 ## Development
 
-This package is built using `sbt`. You can run the tests with `sbt test`.
+This package is built using `sbt`. You can run the tests with `sbt test`. You can lint with `sbt scalafmt`. You can use `+` in front of a directive to cross-build, though you'll need Java 8 (as opposed to Java 11) to cross-build to Scala 2.11. 
