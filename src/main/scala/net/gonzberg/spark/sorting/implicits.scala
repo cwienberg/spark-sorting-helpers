@@ -26,8 +26,7 @@ object implicits {
     K: Ordering: ClassTag,
     V: ClassTag
   ](rdd: RDD[(K, V)]): SecondarySortGroupAndSortByPairRDDFunctions[K, V] = {
-    SecondarySortGroupAndSortByPairRDDFunctions.rddToGroupByAndSortFunctions(
-      rdd
-    )
+    SecondarySortGroupAndSortByPairRDDFunctions
+      .rddToSecondarySortGroupAndSortByPairRDDFunctions(rdd)
   }
 }

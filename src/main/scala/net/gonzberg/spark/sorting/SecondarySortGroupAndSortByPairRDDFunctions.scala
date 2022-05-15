@@ -475,9 +475,10 @@ final class SecondarySortGroupAndSortByPairRDDFunctions[
 }
 
 private[sorting] object SecondarySortGroupAndSortByPairRDDFunctions {
-  implicit def rddToGroupByAndSortFunctions[K: Ordering: ClassTag, V: ClassTag](
-    rdd: RDD[(K, V)]
-  ): SecondarySortGroupAndSortByPairRDDFunctions[K, V] = {
+  implicit def rddToSecondarySortGroupAndSortByPairRDDFunctions[
+    K: Ordering: ClassTag,
+    V: ClassTag
+  ](rdd: RDD[(K, V)]): SecondarySortGroupAndSortByPairRDDFunctions[K, V] = {
     new SecondarySortGroupAndSortByPairRDDFunctions(rdd)
   }
 }
