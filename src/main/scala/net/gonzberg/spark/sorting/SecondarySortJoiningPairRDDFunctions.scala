@@ -1,6 +1,7 @@
 package net.gonzberg.spark.sorting
 
-import SortHelpers.repartitionAndSort
+import net.gonzberg.spark.sorting.util.OuterJoinIterator
+import net.gonzberg.spark.sorting.util.SortHelpers.repartitionAndSort
 import org.apache.spark.{HashPartitioner, Partitioner}
 import org.apache.spark.rdd.RDD
 

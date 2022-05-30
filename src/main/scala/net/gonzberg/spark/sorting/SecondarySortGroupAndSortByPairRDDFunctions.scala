@@ -1,10 +1,7 @@
 package net.gonzberg.spark.sorting
 
-import net.gonzberg.spark.sorting.SortHelpers.{
-  joinAndApply,
-  modifyResourcePreparationAndOp,
-  repartitionAndSort
-}
+import net.gonzberg.spark.sorting.util.GroupByKeyIterator
+import net.gonzberg.spark.sorting.util.SortHelpers.{joinAndApply, modifyResourcePreparationAndOp, repartitionAndSort}
 import org.apache.spark.{HashPartitioner, Partitioner}
 import org.apache.spark.rdd.RDD
 

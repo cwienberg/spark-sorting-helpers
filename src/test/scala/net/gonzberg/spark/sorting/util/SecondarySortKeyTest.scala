@@ -1,4 +1,4 @@
-package net.gonzberg.spark.sorting
+package net.gonzberg.spark.sorting.util
 
 import org.scalatest.funsuite.AnyFunSuite
 

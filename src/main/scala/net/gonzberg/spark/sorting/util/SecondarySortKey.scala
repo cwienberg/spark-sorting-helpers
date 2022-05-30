@@ -1,4 +1,4 @@
-package net.gonzberg.spark.sorting
+package net.gonzberg.spark.sorting.util
 
 private[sorting] case class SecondarySortKey[K: Ordering, V: Ordering](
   key: K,

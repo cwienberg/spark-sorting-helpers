@@ -1,9 +1,9 @@
-package net.gonzberg.spark.sorting
+package net.gonzberg.spark.sorting.util
 
+import net.gonzberg.spark.sorting.SparkTestingMixin
 import org.apache.spark.HashPartitioner
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.compat._
 import scala.math.Ordered.orderingToOrdered
 
 class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
