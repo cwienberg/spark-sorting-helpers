@@ -11,24 +11,11 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
   dataset: Dataset[(K, V)]
 ) extends Serializable {
 
-  private def repartitioned(
-    partitionCol: Column,
-    numPartitions: Option[Int]
-  ): Dataset[(K, V)] = {
-    numPartitions match {
-      case Some(num) => dataset.repartition(num, partitionCol)
-      case None      => dataset.repartition(partitionCol)
-    }
-  }
-
   private def groupByKeySortValuesAndMapGroups[T: Encoder](
     orderExprs: Seq[Column],
     numPartitions: Option[Int] = None
   )(mapGroupFunction: ((K, Iterator[V])) => T): Dataset[T] = {
-    val keyColumn = col(dataset.columns.head)
-    val orderColumns = keyColumn +: orderExprs
-    repartitioned(keyColumn, numPartitions)
-      .sortWithinPartitions(orderColumns: _*)
+    SecondarySortGroupByKeyDatasetFunctions.repartitionAndSort(dataset, numPartitions, orderExprs)
       .mapPartitions { partition =>
         val groupByKeyIterator = new GroupByKeyIterator(partition)
         groupByKeyIterator.map(group => mapGroupFunction(group))
@@ -119,5 +106,15 @@ object SecondarySortGroupByKeyDatasetFunctions {
     dataset: Dataset[(K, V)]
   ): SecondarySortGroupByKeyDatasetFunctions[K, V] = {
     new SecondarySortGroupByKeyDatasetFunctions(dataset)
+  }
+
+  private def repartitionAndSort[K, T](dataset: Dataset[(K, T)], numPartitions: Option[Int], orderExprs: Seq[Column]): Dataset[(K, T)] = {
+    val keyColumn = col(dataset.columns.head)
+    val repartitioned = numPartitions match {
+      case Some(num) => dataset.repartition(num, keyColumn)
+      case None      => dataset.repartition(keyColumn)
+    }
+    val orderColumns = keyColumn +: orderExprs
+    repartitioned.sortWithinPartitions(orderColumns: _*)
   }
 }
