@@ -4,6 +4,7 @@ import SecondarySortGroupByKeyDatasetFunctions.datasetToSecondarySortGroupByKeyD
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
+import scala.collection.immutable.Queue
 import scala.util.Random
 
 case class DatasetTestWrapper[T](value: T)
@@ -45,6 +46,44 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     }
     assert(actualDataset.rdd.getNumPartitions == 7)
     actualDataset.unpersist()
+  }
+
+  test("sortedFoldLeftByKey applies fold as expected") {
+    val input =
+      Seq(("key1", DatasetTestWrapper(1)), ("key1", DatasetTestWrapper(2)), ("key1", DatasetTestWrapper(3)), ("key2", DatasetTestWrapper(4)), ("key2", DatasetTestWrapper(5)))
+    val dataset = rand.shuffle(input).toDS()
+    val actual = dataset
+      .sortedFoldLeftByKey(
+        Queue.empty[DatasetTestWrapper[Int]],
+        (q: Queue[DatasetTestWrapper[Int]], v: DatasetTestWrapper[Int]) => q.enqueue(v),
+        dataset.col("_2.value")
+      )
+      .map { case (key, queue) => (key, queue.map(_.value)) }
+      .collect()
+      .toMap
+    val expected = Map("key1" -> Queue(1, 2, 3), "key2" -> Queue(4, 5))
+    assert(expected == actual)
+  }
+
+  test(
+    "sortedFoldLeftByKey with a number of partitions applies fold as expected"
+  ) {
+    val input =
+      Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
+    val dataset = rand.shuffle(input).toDS()
+    val actualDataset = dataset
+      .sortedFoldLeftByKey(
+        Queue.empty[Int],
+        (q: Queue[Int], v: Int) => q.enqueue(v),
+        7,
+        dataset.col("_2")
+      )
+      .cache()
+    val actual = actualDataset.collect().toMap
+    val expected = Map("key1" -> Queue(1, 2, 3), "key2" -> Queue(4, 5))
+    assert(expected == actual)
+    assert(actualDataset.rdd.getNumPartitions == 7)
+    actualDataset.unpersist(false)
   }
 
 }

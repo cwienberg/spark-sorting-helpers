@@ -27,15 +27,17 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](dataset: Dataset[(K, V
       }
   }
 
+  private def sortedGroupByKey(numPartitions: Option[Int], orderExprs: Seq[Column])(implicit kSeqVEncoder: Encoder[(K, Seq[V])]): Dataset[(K, Seq[V])] = {
+    groupByKeySortValuesAndMapGroups(orderExprs, numPartitions){ case (key, values) => (key, values.toSeq) }
+  }
+
   /** Groups by key and sorts the values
    * @param numPartitions the number of partitions for shuffling
    * @param orderExprs the column(s) to order by within each group
    * @return Dataset of keys and sorted values
    */
   def sortedGroupByKey(numPartitions: Int, orderExprs: Column*)(implicit kSeqVEncoder: Encoder[(K, Seq[V])]): Dataset[(K, Seq[V])] = {
-    groupByKeySortValuesAndMapGroups(orderExprs, Some(numPartitions)){
-      group => (group._1, group._2.toSeq)
-    }
+    sortedGroupByKey(Some(numPartitions), orderExprs)
   }
 
   /** Groups by key and sorts the values
@@ -43,9 +45,40 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](dataset: Dataset[(K, V
    * @return Dataset of keys and sorted values
    */
   def sortedGroupByKey(orderExprs: Column*)(implicit kSeqVEncoder: Encoder[(K, Seq[V])]): Dataset[(K, Seq[V])] = {
-    groupByKeySortValuesAndMapGroups(orderExprs){
-      group => (group._1, group._2.toSeq)
+    sortedGroupByKey(None, orderExprs)
+  }
+
+  private def sortedFoldLeftByKey[A](startValue: A, op: (A, V) => A, numPartitions: Option[Int], orderExprs: Seq[Column])(implicit kSeqVEncoder: Encoder[(K, A)]): Dataset[(K, A)] = {
+    groupByKeySortValuesAndMapGroups(orderExprs, numPartitions){
+      case (key, values) => (key, values.foldLeft(startValue)(op))
     }
+  }
+
+  /** Groups by key and applies a binary operation using foldLeft
+   * over the values sorted by some implicit ordering
+   * @param startValue the start value for the fold
+   * @param op the binary operation for folding
+   * @param numPartitions the number of partitions
+   * @param orderExprs the column(s) to order by within each group
+   * @tparam A the result type of the folding operation
+   * @return Dataset with keys and values, where values are the result
+   *         of applying foldLeft across the sorted values
+   */
+  def sortedFoldLeftByKey[A](startValue: A, op: (A, V) => A, numPartitions: Int, orderExprs: Column*)(implicit kSeqVEncoder: Encoder[(K, A)]): Dataset[(K, A)] = {
+    sortedFoldLeftByKey(startValue, op, Some(numPartitions), orderExprs)
+  }
+
+  /** Groups by key and applies a binary operation using foldLeft
+   * over the values sorted by some implicit ordering
+   * @param startValue the start value for the fold
+   * @param op the binary operation for folding
+   * @param orderExprs the column(s) to order by within each group
+   * @tparam A the result type of the folding operation
+   * @return Dataset with keys and values, where values are the result
+   *         of applying foldLeft across the sorted values
+   */
+  def sortedFoldLeftByKey[A](startValue: A, op: (A, V) => A, orderExprs: Column*)(implicit kSeqVEncoder: Encoder[(K, A)]): Dataset[(K, A)] = {
+    sortedFoldLeftByKey(startValue, op, None, orderExprs)
   }
 
 }
