@@ -95,6 +95,63 @@ final class SecondarySortGroupingPairRDDFunctions[
     sortedFoldLeftByKey(startValue, op, defaultPartitioner)
   }
 
+  /** Groups by key and applies a binary operation using foldLeft
+    * over the values sorted by some implicit ordering
+    * @param startValues an RDD of start values by key
+    * @param op the binary operation for folding
+    * @tparam A the result type of the folding operation
+    * @return PairRDD with keys and values, where values are the result
+    *         of applying foldLeft across the sorted values
+    */
+  def sortedFoldLeftByKey[A: ClassTag](
+    startValues: RDD[(K, A)],
+    op: (A, V) => A,
+    partitioner: Partitioner
+  ): RDD[(K, A)] = {
+    val repartitionedStartValues: RDD[(K, A)] =
+      startValues.repartitionAndSortWithinPartitions(partitioner)
+    val repartitionedValues: RDD[(K, Iterator[V])] = groupByKeyAndSortValues(
+      partitioner
+    )
+    repartitionedStartValues.zipPartitions(
+      repartitionedValues,
+      preservesPartitioning = true
+    )(joinAndFold(op))
+  }
+
+  /** Groups by key and applies a binary operation using foldLeft
+    * over the values sorted by some implicit ordering
+    * @param startValues an RDD of start values by key
+    * @param op the binary operation for folding
+    * @tparam A the result type of the folding operation
+    * @return PairRDD with keys and values, where values are the result
+    *         of applying foldLeft across the sorted values
+    */
+  def sortedFoldLeftByKey[A: ClassTag](
+    startValues: RDD[(K, A)],
+    op: (A, V) => A,
+    numPartitions: Int
+  ): RDD[(K, A)] = {
+    val partitioner = new HashPartitioner(numPartitions)
+    sortedFoldLeftByKey(startValues, op, partitioner)
+  }
+
+  /** Groups by key and applies a binary operation using foldLeft
+    * over the values sorted by some implicit ordering
+    * @param startValues an RDD of start values by key
+    * @param op the binary operation for folding
+    * @tparam A the result type of the folding operation
+    * @return PairRDD with keys and values, where values are the result
+    *         of applying foldLeft across the sorted values
+    */
+  def sortedFoldLeftByKey[A: ClassTag](
+    startValues: RDD[(K, A)],
+    op: (A, V) => A
+  ): RDD[(K, A)] = {
+    val partitioner = Partitioner.defaultPartitioner(rdd, startValues)
+    sortedFoldLeftByKey(startValues, op, partitioner)
+  }
+
   /** Applies op to every value with some resource, where values and resources
     * share the same key. This allows you to send data to executors based on key,
     * so that:

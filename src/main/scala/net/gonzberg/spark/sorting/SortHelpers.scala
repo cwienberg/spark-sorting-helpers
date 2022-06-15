@@ -91,4 +91,38 @@ private[sorting] object SortHelpers {
       valueKey -> valueFunction(value)
     }
   }
+
+  def joinAndFold[K, V, A](
+    op: (A, V) => A
+  )(startValuesIter: Iterator[(K, A)], valuesIter: Iterator[(K, Iterator[V])])(
+    implicit keyOrdering: Ordering[K]
+  ): Iterator[(K, A)] = {
+    import keyOrdering.mkOrderingOps
+
+    val startValuesOptionIter = startValuesIter.map(Some(_))
+    val valueOptionIter = valuesIter.map(Some(_))
+    val zippedValuesAndResources =
+      startValuesOptionIter.zipAll(valueOptionIter, None, None)
+    for {
+      (maybeStartValue, maybeValue) <- zippedValuesAndResources
+      (startValueKey, startValue) = maybeStartValue.getOrElse(
+        throw new IllegalArgumentException(
+          "Must provide a resource for every key"
+        )
+      )
+      (valueKey, values) = maybeValue.getOrElse(
+        throw new IllegalArgumentException("Must provide a value for every key")
+      )
+      _ = require(
+        startValueKey >= valueKey,
+        "Must provide a value for every key"
+      )
+      _ = require(
+        startValueKey <= valueKey,
+        "Must provide a resource for every key"
+      )
+    } yield {
+      valueKey -> values.foldLeft(startValue)(op)
+    }
+  }
 }
