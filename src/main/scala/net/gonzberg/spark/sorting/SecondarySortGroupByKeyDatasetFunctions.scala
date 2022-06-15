@@ -15,7 +15,8 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     orderExprs: Seq[Column],
     numPartitions: Option[Int] = None
   )(mapGroupFunction: ((K, Iterator[V])) => T): Dataset[T] = {
-    SecondarySortGroupByKeyDatasetFunctions.repartitionAndSort(dataset, numPartitions, orderExprs)
+    SecondarySortGroupByKeyDatasetFunctions
+      .repartitionAndSort(dataset, numPartitions, orderExprs)
       .mapPartitions { partition =>
         val groupByKeyIterator = new GroupByKeyIterator(partition)
         groupByKeyIterator.map(group => mapGroupFunction(group))
@@ -108,7 +109,11 @@ object SecondarySortGroupByKeyDatasetFunctions {
     new SecondarySortGroupByKeyDatasetFunctions(dataset)
   }
 
-  private def repartitionAndSort[K, T](dataset: Dataset[(K, T)], numPartitions: Option[Int], orderExprs: Seq[Column]): Dataset[(K, T)] = {
+  private def repartitionAndSort[K, T](
+    dataset: Dataset[(K, T)],
+    numPartitions: Option[Int],
+    orderExprs: Seq[Column]
+  ): Dataset[(K, T)] = {
     val keyColumn = col(dataset.columns.head)
     val repartitioned = numPartitions match {
       case Some(num) => dataset.repartition(num, keyColumn)
