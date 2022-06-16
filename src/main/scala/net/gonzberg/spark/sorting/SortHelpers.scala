@@ -107,7 +107,7 @@ private[sorting] object SortHelpers {
       (maybeStartValue, maybeValue) <- zippedValuesAndResources
       (startValueKey, startValue) = maybeStartValue.getOrElse(
         throw new IllegalArgumentException(
-          "Must provide a resource for every key"
+          "Must provide a starting value for every key"
         )
       )
       (valueKey, values) = maybeValue.getOrElse(
@@ -119,7 +119,7 @@ private[sorting] object SortHelpers {
       )
       _ = require(
         startValueKey <= valueKey,
-        "Must provide a resource for every key"
+        "Must provide a starting value for every key"
       )
     } yield {
       valueKey -> values.foldLeft(startValue)(op)
