@@ -64,6 +64,15 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     assert(actual == expected)
   }
 
+  test("joinAndApply fails when there are more than one start values for a key") {
+    val operation = (resource: Map[String, Int]) => (value: String) => resource(value)
+    val resources = Iterator("key1" -> Map("lookup1" -> 1, "lookup2" -> 2), "key1" -> Map.empty[String, Int], "key2" -> Map("lookup3" -> 3, "lookup4" -> 4))
+    val values = Iterator("key1" -> Iterator("lookup1", "lookup2"), "key2" -> Iterator("lookup3", "lookup4"))
+    assertThrows[IllegalArgumentException] {
+      SortHelpers.joinAndApply(operation)(resources, values).foreach(identity)
+    }
+  }
+
   test("joinAndApply fails when a resource is missing for a key") {
     val operation = (resource: Map[String, Int]) => (value: String) => resource(value)
     val values = Vector("key1" -> Iterator("lookup1", "lookup2"), "key2" -> Iterator("lookup3", "lookup4"))
@@ -96,6 +105,15 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
       "key2" -> -4.0
     )
     assert(actual == expected)
+  }
+
+  test("joinAndFold fails when there are more than one start values for a key") {
+    val operation = (start: Double, next: Int) => start + next
+    val startValues = Iterator("key1" -> 1.0, "key1" -> 5.0, "key2" -> 2.0)
+    val values = Iterator("key1" -> Iterator(4, 2, -10), "key2" -> Iterator(-6))
+    assertThrows[IllegalArgumentException] {
+      SortHelpers.joinAndFold(operation)(startValues, values).foreach(identity)
+    }
   }
 
   test("joinAndFold fails when a start value is missing for a key") {
