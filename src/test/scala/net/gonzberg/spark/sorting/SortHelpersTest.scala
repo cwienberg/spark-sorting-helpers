@@ -75,7 +75,7 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     }
   }
 
-  test("joinAndApply failes when a value is missing for a key") {
+  test("joinAndApply fails when a value is missing for a key") {
     val operation = (resource: Map[String, Int]) => (value: String) => resource(value)
     val resources = Vector("key1" -> Map("lookup1" -> 1, "lookup2" -> 2), "key2" -> Map("lookup3" -> 3, "lookup4" -> 4))
     assertThrows[IllegalArgumentException] {
@@ -83,6 +83,40 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     }
     assertThrows[IllegalArgumentException] {
       SortHelpers.joinAndApply(operation)(resources.iterator, Iterator("key2" -> Iterator("lookup3", "lookup4"))).foreach(identity)
+    }
+  }
+
+  test("joinAndFold joins properly and folds with op") {
+    val operation = (start: Double, next: Int) => start + next
+    val startValues = Iterator("key1" -> 1.0, "key2" -> 2.0)
+    val values = Iterator("key1" -> Iterator(4, 2, -10), "key2" -> Iterator(-6))
+    val actual = SortHelpers.joinAndFold(operation)(startValues, values).toVector
+    val expected = Vector(
+      "key1" -> -3.0,
+      "key2" -> -4.0
+    )
+    assert(actual == expected)
+  }
+
+  test("joinAndFold fails when a start value is missing for a key") {
+    val operation = (start: Double, next: Int) => start + next
+    val values = Iterator("key1" -> Iterator(4, 2, -10), "key2" -> Iterator(-6))
+    assertThrows[IllegalArgumentException] {
+      SortHelpers.joinAndFold(operation)(Iterator("key1" -> 1.0), values.iterator).foreach(identity)
+    }
+    assertThrows[IllegalArgumentException] {
+      SortHelpers.joinAndFold(operation)(Iterator("key2" -> 2.0), values.iterator).foreach(identity)
+    }
+  }
+
+  test("joinAndFold fails when a value is missing for a key") {
+    val operation = (start: Double, next: Int) => start + next
+    val startValues = Iterator("key1" -> 1.0, "key2" -> 2.0)
+    assertThrows[IllegalArgumentException] {
+      SortHelpers.joinAndFold(operation)(startValues, Iterator("key1" -> Iterator(4, 2, -10))).foreach(identity)
+    }
+    assertThrows[IllegalArgumentException] {
+      SortHelpers.joinAndFold(operation)(startValues, Iterator("key2" -> Iterator(-6))).foreach(identity)
     }
   }
 }
