@@ -138,6 +138,111 @@ class SecondarySortGroupingPairRDDFunctionsTest
     actualRDD.unpersist(false)
   }
 
+  test("sortedFoldLeftByKey applies join and fold as expected") {
+    val input =
+      Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
+    val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
+    val rdd = sc.parallelize(rand.shuffle(input))
+    val startingValuesRDD = sc.parallelize(startingValues)
+    val actual = rdd
+      .sortedFoldLeftByKey(
+        startingValuesRDD,
+        (q: Queue[Int], v: Int) => q.enqueue(v)
+      )
+      .collectAsMap()
+    val expected = Map("key1" -> Queue(-1, 1, 2, 3), "key2" -> Queue(-2, 4, 5))
+    assert(expected == actual)
+  }
+
+  test("sortedFoldLeftByKey with a number of partitions applies join and fold as expected") {
+    val input =
+      Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
+    val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
+    val rdd = sc.parallelize(rand.shuffle(input))
+    val startingValuesRDD = sc.parallelize(startingValues)
+    val actualRDD = rdd
+      .sortedFoldLeftByKey(
+        startingValuesRDD,
+        (q: Queue[Int], v: Int) => q.enqueue(v),
+        numPartitions = 7
+      )
+      .cache()
+    val actual = actualRDD.collectAsMap()
+    val expected = Map("key1" -> Queue(-1, 1, 2, 3), "key2" -> Queue(-2, 4, 5))
+    assert(expected == actual)
+    assert(actualRDD.getNumPartitions == 7)
+    actualRDD.unpersist(false)
+  }
+
+  test("sortedFoldLeftByKey with a partitioner applies join and fold as expected") {
+    val input =
+      Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
+    val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
+    val rdd = sc.parallelize(rand.shuffle(input))
+    val startingValuesRDD = sc.parallelize(startingValues)
+    val partitioner = new HashPartitioner(3)
+    val actualRDD = rdd
+      .sortedFoldLeftByKey(
+        startingValuesRDD,
+        (q: Queue[Int], v: Int) => q.enqueue(v),
+        partitioner = partitioner
+      )
+      .cache()
+    val actual = actualRDD.collectAsMap()
+    val expected = Map("key1" -> Queue(-1, 1, 2, 3), "key2" -> Queue(-2, 4, 5))
+    assert(expected == actual)
+    assert(actualRDD.getNumPartitions == 3)
+    actualRDD.unpersist(false)
+  }
+
+  test("sortedFoldLeftByKey fails when key has two start values") {
+    val input =
+      Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
+    val startingValues = Seq(("key1", Queue(-1)), ("key1", Queue(-100)), ("key2", Queue(-2)))
+    val rdd = sc.parallelize(rand.shuffle(input))
+    val startingValuesRDD = sc.parallelize(startingValues)
+    assertThrows[SparkException] {
+      rdd
+        .sortedFoldLeftByKey(
+          startingValuesRDD,
+          (q: Queue[Int], v: Int) => q.enqueue(v)
+        )
+        .collect()
+    }
+  }
+
+  test("sortedFoldLeftByKey fails when key has no start values") {
+    val input =
+      Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
+    val startingValues = Seq(("key1", Queue(-1)))
+    val rdd = sc.parallelize(rand.shuffle(input))
+    val startingValuesRDD = sc.parallelize(startingValues)
+    assertThrows[SparkException] {
+      rdd
+        .sortedFoldLeftByKey(
+          startingValuesRDD,
+          (q: Queue[Int], v: Int) => q.enqueue(v)
+        )
+        .collect()
+    }
+  }
+
+  test("sortedFoldLeftByKey fails when key has no values") {
+    val input =
+      Seq(("key1", 1), ("key1", 2), ("key1", 3))
+    val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
+    val rdd = sc.parallelize(rand.shuffle(input))
+    val startingValuesRDD = sc.parallelize(startingValues)
+    assertThrows[SparkException] {
+      rdd
+        .sortedFoldLeftByKey(
+          startingValuesRDD,
+          (q: Queue[Int], v: Int) => q.enqueue(v)
+        )
+        .collect()
+    }
+  }
+
   test("mapValuesWithKeyedPreparedResource fails when a key has two resources") {
     val resources =
       Seq("key1" -> Map.empty[String, Int], "key1" -> Map.empty[String, Int])
