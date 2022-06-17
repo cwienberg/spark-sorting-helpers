@@ -138,7 +138,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     actualRDD.unpersist(false)
   }
 
-  test("sortedFoldLeftByKey applies join and fold as expected") {
+  test("sortedFoldLeftByKey with startingValues RDD applies join and fold as expected") {
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
@@ -154,7 +154,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     assert(expected == actual)
   }
 
-  test("sortedFoldLeftByKey with a number of partitions applies join and fold as expected") {
+  test("sortedFoldLeftByKey with startingValues RDD with a number of partitions applies join and fold as expected") {
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
@@ -174,7 +174,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     actualRDD.unpersist(false)
   }
 
-  test("sortedFoldLeftByKey with a partitioner applies join and fold as expected") {
+  test("sortedFoldLeftByKey with startingValues RDD with a partitioner applies join and fold as expected") {
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
@@ -195,7 +195,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     actualRDD.unpersist(false)
   }
 
-  test("sortedFoldLeftByKey fails when key has two start values") {
+  test("sortedFoldLeftByKey with startingValues RDD fails when key has two start values") {
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)), ("key1", Queue(-100)), ("key2", Queue(-2)))
@@ -211,7 +211,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     }
   }
 
-  test("sortedFoldLeftByKey fails when key has no start values") {
+  test("sortedFoldLeftByKey with startingValues RDD fails when key has no start values") {
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)))
@@ -227,7 +227,7 @@ class SecondarySortGroupingPairRDDFunctionsTest
     }
   }
 
-  test("sortedFoldLeftByKey fails when key has no values") {
+  test("sortedFoldLeftByKey with startingValues RDD fails when key has no values") {
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
