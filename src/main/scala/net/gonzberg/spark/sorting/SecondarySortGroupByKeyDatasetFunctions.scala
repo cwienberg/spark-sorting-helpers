@@ -6,6 +6,7 @@ import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Column, Dataset, Encoder}
 
 import scala.language.implicitConversions
+import scala.reflect.ClassTag
 
 final class SecondarySortGroupByKeyDatasetFunctions[K, V](
   dataset: Dataset[(K, V)]
@@ -110,7 +111,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     * @return Dataset with keys and values, where values are the result
     *         of applying foldLeft across the sorted values
     */
-  def sortedFoldLeftByKey[A](
+  def sortedFoldLeftByKey[A: ClassTag](
     startValues: Dataset[(K, A)],
     op: (A, V) => A,
     numPartitions: Int,
@@ -146,7 +147,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     * @return Dataset with keys and values, where values are the result
     *         of applying foldLeft across the sorted values
     */
-  def sortedFoldLeftByKey[A](
+  def sortedFoldLeftByKey[A: ClassTag](
     startValues: Dataset[(K, A)],
     op: (A, V) => A,
     orderExprs: Column*
