@@ -2,7 +2,6 @@ package net.gonzberg.spark.sorting
 
 import net.gonzberg.spark.sorting.util.GroupByKeyIterator
 import net.gonzberg.spark.sorting.util.SortHelpers.joinAndFold
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.{Column, Dataset, Encoder}
 
