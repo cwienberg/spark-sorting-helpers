@@ -1,5 +1,5 @@
 lazy val scala213 = "2.13.8"
-lazy val scala212 = "2.12.15"
+lazy val scala212 = "2.12.16"
 lazy val scala211 = "2.11.12"
 lazy val supportedScalaVersions = List(scala213, scala212, scala211)
 
@@ -12,8 +12,8 @@ def getPartialVersion(version: String): String = {
 
 def sparkDependency(scalaVersion: String): String = {
   getPartialVersion(scalaVersion) match {
-    case "2.13" => "3.2.1"
-    case "2.12" => "3.2.1"
+    case "2.13" => "3.3.0"
+    case "2.12" => "3.3.0"
     case "2.11" => "2.4.8"
     case v => throw new RuntimeException(s"Have not defined spark version for scala version $v")
   }
