@@ -101,6 +101,33 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     sortedFoldLeftByKey(startValue, op, None, orderExprs)
   }
 
+  private def sortedFoldLeftByKey[A: ClassTag](
+                                        startValues: Dataset[(K, A)],
+                                        op: (A, V) => A,
+                                        numPartitions: Option[Int],
+                                        orderExprs: Seq[Column]
+                                      )(implicit
+                                        keyOrdering: Ordering[K],
+                                        kaEncoder: Encoder[(K, A)]
+                                      ): Dataset[(K, A)] = {
+    import dataset.sparkSession.implicits._
+    val repartitionedStartValues = SecondarySortGroupByKeyDatasetFunctions
+      .repartitionAndSort(startValues, numPartitions)
+      .rdd
+    val repartitionedValues = SecondarySortGroupByKeyDatasetFunctions
+      .repartitionAndSort(dataset, numPartitions, orderExprs)
+      .rdd
+    repartitionedStartValues
+      .zipPartitions(
+        repartitionedValues.mapPartitions(
+          new GroupByKeyIterator(_),
+          preservesPartitioning = true
+        ),
+        preservesPartitioning = true
+      )(joinAndFold(op))
+      .toDS()
+  }
+
   /** Groups by key and applies a binary operation using foldLeft
     * over the values sorted by some implicit ordering
     * @param startValues an RDD of start values by key
@@ -120,22 +147,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     keyOrdering: Ordering[K],
     kaEncoder: Encoder[(K, A)]
   ): Dataset[(K, A)] = {
-    import dataset.sparkSession.implicits._
-    val repartitionedStartValues = SecondarySortGroupByKeyDatasetFunctions
-      .repartitionAndSort(startValues, Some(numPartitions))
-      .rdd
-    val repartitionedValues = SecondarySortGroupByKeyDatasetFunctions
-      .repartitionAndSort(dataset, Some(numPartitions), orderExprs)
-      .rdd
-    repartitionedStartValues
-      .zipPartitions(
-        repartitionedValues.mapPartitions(
-          new GroupByKeyIterator(_),
-          preservesPartitioning = true
-        ),
-        preservesPartitioning = true
-      )(joinAndFold(op))
-      .toDS()
+    sortedFoldLeftByKey(startValues, op, Some(numPartitions), orderExprs)
   }
 
   /** Groups by key and applies a binary operation using foldLeft
@@ -155,22 +167,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     keyOrdering: Ordering[K],
     kaEncoder: Encoder[(K, A)]
   ): Dataset[(K, A)] = {
-    import dataset.sparkSession.implicits._
-    val repartitionedStartValues = SecondarySortGroupByKeyDatasetFunctions
-      .repartitionAndSort(startValues, None)
-      .rdd
-    val repartitionedValues = SecondarySortGroupByKeyDatasetFunctions
-      .repartitionAndSort(dataset, None, orderExprs)
-      .rdd
-    repartitionedStartValues
-      .zipPartitions(
-        repartitionedValues.mapPartitions(
-          new GroupByKeyIterator(_),
-          preservesPartitioning = true
-        ),
-        preservesPartitioning = true
-      )(joinAndFold(op))
-      .toDS()
+    sortedFoldLeftByKey(startValues, op, None, orderExprs)
   }
 }
 
