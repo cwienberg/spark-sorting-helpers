@@ -95,7 +95,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val dataset = rand.shuffle(input).toDS()
     val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     val actual = dataset
-      .sortedFoldLeftByKey(
+      .sortedFoldLeftWithKeyedStartValues(
         startingValuesDS,
         (q: Queue[Int], v: Int) => q.enqueue(v),
         dataset.col("_2")
@@ -113,7 +113,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val dataset = rand.shuffle(input).toDS()
     val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     val actualDS = dataset
-      .sortedFoldLeftByKey(
+      .sortedFoldLeftWithKeyedStartValues(
         startingValuesDS,
         (q: Queue[Int], v: Int) => q.enqueue(v),
         numPartitions = 7,
@@ -135,7 +135,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
-        .sortedFoldLeftByKey(
+        .sortedFoldLeftWithKeyedStartValues(
           startingValuesDS,
           (q: Queue[Int], v: Int) => q.enqueue(v),
           dataset.col("_2")
@@ -152,7 +152,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
-        .sortedFoldLeftByKey(
+        .sortedFoldLeftWithKeyedStartValues(
           startingValuesDS,
           (q: Queue[Int], v: Int) => q.enqueue(v),
           dataset.col("_2")
@@ -169,7 +169,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
-        .sortedFoldLeftByKey(
+        .sortedFoldLeftWithKeyedStartValues(
           startingValuesDS,
           (q: Queue[Int], v: Int) => q.enqueue(v),
           dataset.col("_2")

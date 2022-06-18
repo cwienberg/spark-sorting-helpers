@@ -101,7 +101,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     sortedFoldLeftByKey(startValue, op, None, orderExprs)
   }
 
-  private def sortedFoldLeftByKey[A: ClassTag](
+  private def sortedFoldLeftWithKeyedStartValues[A: ClassTag](
     startValues: Dataset[(K, A)],
     op: (A, V) => A,
     numPartitions: Option[Int],
@@ -138,7 +138,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     * @return Dataset with keys and values, where values are the result
     *         of applying foldLeft across the sorted values
     */
-  def sortedFoldLeftByKey[A: ClassTag](
+  def sortedFoldLeftWithKeyedStartValues[A: ClassTag](
     startValues: Dataset[(K, A)],
     op: (A, V) => A,
     numPartitions: Int,
@@ -147,7 +147,12 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     keyOrdering: Ordering[K],
     kaEncoder: Encoder[(K, A)]
   ): Dataset[(K, A)] = {
-    sortedFoldLeftByKey(startValues, op, Some(numPartitions), orderExprs)
+    sortedFoldLeftWithKeyedStartValues(
+      startValues,
+      op,
+      Some(numPartitions),
+      orderExprs
+    )
   }
 
   /** Groups by key and applies a binary operation using foldLeft
@@ -159,7 +164,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     * @return Dataset with keys and values, where values are the result
     *         of applying foldLeft across the sorted values
     */
-  def sortedFoldLeftByKey[A: ClassTag](
+  def sortedFoldLeftWithKeyedStartValues[A: ClassTag](
     startValues: Dataset[(K, A)],
     op: (A, V) => A,
     orderExprs: Column*
@@ -167,7 +172,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
     keyOrdering: Ordering[K],
     kaEncoder: Encoder[(K, A)]
   ): Dataset[(K, A)] = {
-    sortedFoldLeftByKey(startValues, op, None, orderExprs)
+    sortedFoldLeftWithKeyedStartValues(startValues, op, None, orderExprs)
   }
 }
 
