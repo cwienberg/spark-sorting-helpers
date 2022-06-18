@@ -2,6 +2,7 @@ package net.gonzberg.spark.sorting
 
 import SecondarySortGroupByKeyDatasetFunctions.datasetToSecondarySortGroupByKeyDatasetFunctions
 import org.apache.spark.SparkException
+import org.apache.spark.sql.Dataset
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -92,7 +93,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
     val dataset = rand.shuffle(input).toDS()
-    val startingValuesDS = startingValues.toDS()
+    val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     val actual = dataset
       .sortedFoldLeftByKey(
         startingValuesDS,
@@ -110,7 +111,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
     val dataset = rand.shuffle(input).toDS()
-    val startingValuesDS = startingValues.toDS()
+    val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     val actualDS = dataset
       .sortedFoldLeftByKey(
         startingValuesDS,
@@ -131,7 +132,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)), ("key1", Queue(-100)), ("key2", Queue(-2)))
     val dataset = rand.shuffle(input).toDS()
-    val startingValuesDS = startingValues.toDS()
+    val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
         .sortedFoldLeftByKey(
@@ -148,7 +149,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
       Seq(("key1", 1), ("key1", 2), ("key1", 3), ("key2", 4), ("key2", 5))
     val startingValues = Seq(("key1", Queue(-1)))
     val dataset = rand.shuffle(input).toDS()
-    val startingValuesDS = startingValues.toDS()
+    val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
         .sortedFoldLeftByKey(
@@ -165,7 +166,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
       Seq(("key1", 1), ("key1", 2), ("key1", 3))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
     val dataset = rand.shuffle(input).toDS()
-    val startingValuesDS = startingValues.toDS()
+    val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
         .sortedFoldLeftByKey(
