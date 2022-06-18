@@ -1,6 +1,7 @@
 package net.gonzberg.spark.sorting
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.Dataset
 
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
@@ -28,5 +29,12 @@ object implicits {
   ](rdd: RDD[(K, V)]): SecondarySortGroupAndSortByPairRDDFunctions[K, V] = {
     SecondarySortGroupAndSortByPairRDDFunctions
       .rddToSecondarySortGroupAndSortByPairRDDFunctions(rdd)
+  }
+
+  implicit def datasetToSecondarySortGroupByKeyDatasetFunctions[K, V](
+    dataset: Dataset[(K, V)]
+  ): SecondarySortGroupByKeyDatasetFunctions[K, V] = {
+    SecondarySortGroupByKeyDatasetFunctions
+      .datasetToSecondarySortGroupByKeyDatasetFunctions(dataset)
   }
 }

@@ -34,4 +34,12 @@ class implicitsTest extends AnyFunSuite with Matchers with SparkTestingMixin {
     val actual = rdd.groupByKeyAndSortBy((s: String) => s, numPartitions = 1).collect()
     expected should contain theSameElementsInOrderAs(actual)
   }
+
+  test("SecondarySortGroupByKeyDatasetFunctions implicits available") {
+    import spark.implicits._
+    val ds = Seq("key1" ->"value1", "key1" -> "value2", "key2" -> "value1").toDS()
+    val expected = Array("key1" -> Vector("value1", "value2"), "key2" -> Vector("value1"))
+    val actual = ds.sortedGroupByKey(numPartitions = 1).collect()
+    expected should contain theSameElementsInOrderAs(actual)
+  }
 }
