@@ -94,7 +94,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val dataset = rand.shuffle(input).toDS()
     val startingValuesDS = startingValues.toDS()
     val actual = dataset
-      .sortedFoldLeftByKeyWithKeyedStartValues(
+      .sortedFoldLeftByKey(
         startingValuesDS,
         (q: Queue[Int], v: Int) => q.enqueue(v),
         dataset.col("_2")
@@ -112,7 +112,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val dataset = rand.shuffle(input).toDS()
     val startingValuesDS = startingValues.toDS()
     val actualDS = dataset
-      .sortedFoldLeftByKeyWithKeyedStartValues(
+      .sortedFoldLeftByKey(
         startingValuesDS,
         (q: Queue[Int], v: Int) => q.enqueue(v),
         numPartitions = 7,
@@ -134,7 +134,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val startingValuesDS = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
-        .sortedFoldLeftByKeyWithKeyedStartValues(
+        .sortedFoldLeftByKey(
           startingValuesDS,
           (q: Queue[Int], v: Int) => q.enqueue(v),
           dataset.col("_2")
@@ -151,7 +151,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val startingValuesDS = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
-        .sortedFoldLeftByKeyWithKeyedStartValues(
+        .sortedFoldLeftByKey(
           startingValuesDS,
           (q: Queue[Int], v: Int) => q.enqueue(v),
           dataset.col("_2")
@@ -168,7 +168,7 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     val startingValuesDS = startingValues.toDS()
     assertThrows[SparkException] {
       dataset
-        .sortedFoldLeftByKeyWithKeyedStartValues(
+        .sortedFoldLeftByKey(
           startingValuesDS,
           (q: Queue[Int], v: Int) => q.enqueue(v),
           dataset.col("_2")
