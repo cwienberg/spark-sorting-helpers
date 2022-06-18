@@ -8,10 +8,10 @@ import org.scalatest.matchers.should.Matchers
 import scala.collection.immutable.Queue
 import scala.util.Random
 
-class TestWrapper[T](val value: T) extends Serializable
+class RDDTestWrapper[T](val value: T) extends Serializable
 
-object TestWrapper {
-  def apply[T](value: T): TestWrapper[T] = new TestWrapper(value)
+object RDDTestWrapper {
+  def apply[T](value: T): RDDTestWrapper[T] = new RDDTestWrapper(value)
 }
 
 class SecondarySortGroupAndSortByPairRDDFunctionsTest
@@ -25,9 +25,9 @@ class SecondarySortGroupAndSortByPairRDDFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100)
       value <- 0.until(100)
-    } yield (key, TestWrapper(value * key))
+    } yield (key, RDDTestWrapper(value * key))
     val rdd = sc.parallelize(rand.shuffle(input), 5)
-    val actual = rdd.groupByKeyAndSortBy((v: TestWrapper[Int]) => v.value).collectAsMap()
+    val actual = rdd.groupByKeyAndSortBy((v: RDDTestWrapper[Int]) => v.value).collectAsMap()
     assert(actual.size == 3)
     assert(actual.keys.toSet == Set(1, 10, 100))
     actual.values.foreach(v => assert(v.size == 100))
@@ -40,9 +40,9 @@ class SecondarySortGroupAndSortByPairRDDFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100)
       value <- 0.until(100)
-    } yield (key, TestWrapper(value * key))
+    } yield (key, RDDTestWrapper(value * key))
     val rdd = sc.parallelize(rand.shuffle(input), 5)
-    val actualRDD = rdd.groupByKeyAndSortBy((v: TestWrapper[Int]) => v.value, 7).cache()
+    val actualRDD = rdd.groupByKeyAndSortBy((v: RDDTestWrapper[Int]) => v.value, 7).cache()
     val actual = actualRDD.collectAsMap()
     assert(actual.size == 3)
     assert(actual.keys.toSet == Set(1, 10, 100))
@@ -58,10 +58,10 @@ class SecondarySortGroupAndSortByPairRDDFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100)
       value <- 0.until(100)
-    } yield (key, TestWrapper(value * key))
+    } yield (key, RDDTestWrapper(value * key))
     val rdd = sc.parallelize(rand.shuffle(input), 5)
     val partitioner = new HashPartitioner(3)
-    val actualRDD = rdd.groupByKeyAndSortBy((v: TestWrapper[Int]) => v.value, partitioner).cache()
+    val actualRDD = rdd.groupByKeyAndSortBy((v: RDDTestWrapper[Int]) => v.value, partitioner).cache()
     val actual = actualRDD.collectAsMap()
     assert(actual.size == 3)
     assert(actual.keys.toSet == Set(1, 10, 100))
@@ -77,10 +77,10 @@ class SecondarySortGroupAndSortByPairRDDFunctionsTest
     val input = for {
       key <- Seq(1, 10, 100, 1000, 10000)
       value <- 0.until(100)
-    } yield (key, TestWrapper(value * key))
+    } yield (key, RDDTestWrapper(value * key))
     val partitioner = new HashPartitioner(3)
     val rdd = sc.parallelize(rand.shuffle(input), 5).partitionBy(partitioner)
-    val actual = rdd.groupByKeyAndSortBy((v: TestWrapper[Int]) => v.value, partitioner).collectAsMap()
+    val actual = rdd.groupByKeyAndSortBy((v: RDDTestWrapper[Int]) => v.value, partitioner).collectAsMap()
     assert(actual.size == 5)
     assert(actual.keys.toSet == Set(1, 10, 100, 1000, 10000))
     actual.values.foreach(v => assert(v.size == 100))
@@ -91,12 +91,12 @@ class SecondarySortGroupAndSortByPairRDDFunctionsTest
 
   test("sortedFoldLeftByKey applies fold as expected") {
     val input =
-      Seq(("key1", TestWrapper(1)), ("key1", TestWrapper(2)), ("key1", TestWrapper(3)), ("key2", TestWrapper(4)), ("key2", TestWrapper(5)))
+      Seq(("key1", RDDTestWrapper(1)), ("key1", RDDTestWrapper(2)), ("key1", RDDTestWrapper(3)), ("key2", RDDTestWrapper(4)), ("key2", RDDTestWrapper(5)))
     val rdd = sc.parallelize(rand.shuffle(input))
     val actual = rdd
       .foldLeftByKeySortedBy(
-        Queue.empty[TestWrapper[Int]],
-        (q: Queue[TestWrapper[Int]], v: TestWrapper[Int]) => q.enqueue(v),
+        Queue.empty[RDDTestWrapper[Int]],
+        (q: Queue[RDDTestWrapper[Int]], v: RDDTestWrapper[Int]) => q.enqueue(v),
         _.value
       )
       .mapValues(_.map(_.value))

@@ -1,4 +1,4 @@
-package net.gonzberg.spark.sorting
+package net.gonzberg.spark.sorting.util
 
 import org.apache.spark.Partitioner
 import org.apache.spark.rdd.RDD
@@ -56,6 +56,7 @@ private[sorting] object SortHelpers {
       val preparedResource = prepareResource(resource)
       op(preparedResource, _)
     }
+
     newOp
   }
 

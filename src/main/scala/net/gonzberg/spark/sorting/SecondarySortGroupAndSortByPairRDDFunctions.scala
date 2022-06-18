@@ -1,6 +1,7 @@
 package net.gonzberg.spark.sorting
 
-import net.gonzberg.spark.sorting.SortHelpers.{
+import net.gonzberg.spark.sorting.util.GroupByKeyIterator
+import net.gonzberg.spark.sorting.util.SortHelpers.{
   joinAndApply,
   modifyResourcePreparationAndOp,
   repartitionAndSort

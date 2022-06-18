@@ -1,22 +1,21 @@
 package net.gonzberg.spark.sorting
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkContext
 
 private[sorting] trait SparkTestingMixin {
-  def sc: SparkContext = SparkTestingMixin.sc
+  val spark: SparkSession = SparkTestingMixin.spark
+  def sc: SparkContext = spark.sparkContext
 }
 
 private[sorting] object SparkTestingMixin {
-  lazy val sc: SparkContext = {
-    val sparkConf = new SparkConf()
-      .setAppName("SparkSortingTestApplication")
-      .setMaster("local[*]")
-      .set("spark.driver.bindAddress", "127.0.0.1")
-      .set("spark.ui.enabled", "false")
-      .set("spark.worker.cleanup.enabled", "true")
-      .set("spark.default.parallelism", "5")
-      .set("spark.sql.shuffle.partitions", "5")
-
-    SparkContext.getOrCreate(sparkConf)
-  }
+  lazy val spark: SparkSession = SparkSession.builder()
+    .master("local[*]")
+    .appName("SparkSortingTestApplication")
+    .config("spark.driver.bindAddress", "127.0.0.1")
+    .config("spark.ui.enabled", "false")
+    .config("spark.worker.cleanup.enabled", "true")
+    .config("spark.default.parallelism", "5")
+    .config("spark.sql.shuffle.partitions", "5")
+    .getOrCreate()
 }

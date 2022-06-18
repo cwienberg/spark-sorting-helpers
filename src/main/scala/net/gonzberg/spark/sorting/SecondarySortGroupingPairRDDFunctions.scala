@@ -1,6 +1,7 @@
 package net.gonzberg.spark.sorting
 
-import SortHelpers._
+import net.gonzberg.spark.sorting.util.GroupByKeyIterator
+import net.gonzberg.spark.sorting.util.SortHelpers._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{HashPartitioner, Partitioner}
 

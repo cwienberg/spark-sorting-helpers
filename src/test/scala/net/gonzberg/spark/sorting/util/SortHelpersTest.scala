@@ -1,5 +1,6 @@
-package net.gonzberg.spark.sorting
+package net.gonzberg.spark.sorting.util
 
+import net.gonzberg.spark.sorting.SparkTestingMixin
 import org.apache.spark.HashPartitioner
 import org.scalatest.funsuite.AnyFunSuite
 
