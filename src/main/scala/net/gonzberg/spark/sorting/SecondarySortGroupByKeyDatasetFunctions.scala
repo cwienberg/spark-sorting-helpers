@@ -102,14 +102,14 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
   }
 
   private def sortedFoldLeftByKey[A: ClassTag](
-                                        startValues: Dataset[(K, A)],
-                                        op: (A, V) => A,
-                                        numPartitions: Option[Int],
-                                        orderExprs: Seq[Column]
-                                      )(implicit
-                                        keyOrdering: Ordering[K],
-                                        kaEncoder: Encoder[(K, A)]
-                                      ): Dataset[(K, A)] = {
+    startValues: Dataset[(K, A)],
+    op: (A, V) => A,
+    numPartitions: Option[Int],
+    orderExprs: Seq[Column]
+  )(implicit
+    keyOrdering: Ordering[K],
+    kaEncoder: Encoder[(K, A)]
+  ): Dataset[(K, A)] = {
     import dataset.sparkSession.implicits._
     val repartitionedStartValues = SecondarySortGroupByKeyDatasetFunctions
       .repartitionAndSort(startValues, numPartitions)
