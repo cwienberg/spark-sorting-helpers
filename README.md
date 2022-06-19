@@ -24,8 +24,8 @@ This library attempts to support Scala `2.11`, `2.12`, and `2.13`. Since there i
 | Scala | Spark |
 | ----- | ----- |
 | 2.11  | 2.4.8 |
-| 2.12  | 3.2.1 |
-| 2.13  | 3.2.1 |
+| 2.12  | 3.3.0 |
+| 2.13  | 3.3.0 |
 
 Other combinations of versions may also work, but these are the ones for which the tests run automatically. We will likely drop `2.11` support in a later release, depending on when it becomes too difficult to support.
 
