@@ -176,7 +176,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
   }
 }
 
-object SecondarySortGroupByKeyDatasetFunctions {
+private[sorting] object SecondarySortGroupByKeyDatasetFunctions {
   implicit def datasetToSecondarySortGroupByKeyDatasetFunctions[K, V](
     dataset: Dataset[(K, V)]
   ): SecondarySortGroupByKeyDatasetFunctions[K, V] = {
