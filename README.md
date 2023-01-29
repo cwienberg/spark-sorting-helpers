@@ -12,7 +12,7 @@ import net.gonzberg.spark.sorting.implicits._
 
 You can then call additional functions on certain RDDs or Datasets, e.g.
 ```scala
-val rdd: RDD[(String, Int)] = ?
+val rdd: RDD[(String, Int)] = ???
 val groupedRDD: RDD[(String, Iterable[Int])] = rdd.sortedGroupByKey
 groupedRDD.foreach((k, group) => assert group == group.sorted)
 ```
