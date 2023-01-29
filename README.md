@@ -5,7 +5,7 @@
 The spark sorting helpers is a library of convenience functions for leveraging the secondary sort functionality of Spark partitioning. Secondary sorting allows an RDD or Dataset to be partitioned by a key while sorting the values, pushing that sort into the underlying shuffle machinery. This provides an efficient way to sort values within a partition if one is already conducting a shuffle operation anyway (e.g. a join or groupBy).
 
 ## Usage
-This library uses the "pimp my library" pattern to add methods to RDDs or Datasets of pairs. You can import the implicits with:
+This library uses the extension methods pattern to add methods to RDDs or Datasets of pairs. You can import the implicits with:
 ```scala
 import net.gonzberg.spark.sorting.implicits._
 ```
