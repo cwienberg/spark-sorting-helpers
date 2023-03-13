@@ -12,8 +12,8 @@ def getPartialVersion(version: String): String = {
 
 def sparkDependency(scalaVersion: String): String = {
   getPartialVersion(scalaVersion) match {
-    case "2.13" => "3.3.1"
-    case "2.12" => "3.3.1"
+    case "2.13" => "3.3.2"
+    case "2.12" => "3.3.2"
     case "2.11" => "2.4.8"
     case v => throw new RuntimeException(s"Have not defined spark version for scala version $v")
   }
