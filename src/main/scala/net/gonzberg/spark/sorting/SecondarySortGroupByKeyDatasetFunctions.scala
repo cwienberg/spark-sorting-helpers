@@ -129,7 +129,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
 
   /** Groups by key and applies a binary operation using foldLeft
     * over the values sorted by some implicit ordering
-    * @param startValues an RDD of start values by key
+    * @param startValues a Dataset of start values by key
     * @param op the binary operation for folding
     * @param numPartitions the number of partitions
     * @param orderExprs the column(s) to order by within each group
@@ -156,7 +156,7 @@ final class SecondarySortGroupByKeyDatasetFunctions[K, V](
 
   /** Groups by key and applies a binary operation using foldLeft
     * over the values sorted by some implicit ordering
-    * @param startValues an RDD of start values by key
+    * @param startValues a Dataset of start values by key
     * @param op the binary operation for folding
     * @param orderExprs the column(s) to order by within each group
     * @tparam A the result type of the folding operation
