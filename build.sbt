@@ -53,7 +53,7 @@ lazy val core = (project in file("."))
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % scalaVersion(sparkDependency(_)).value % Provided,
       "org.apache.spark" %% "spark-sql" % scalaVersion(sparkDependency(_)).value % Provided,
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.9.0",
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.11.0",
       "org.scalatest" %% "scalatest-funsuite" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest-shouldmatchers" % scalatestVersion % Test
     ),
