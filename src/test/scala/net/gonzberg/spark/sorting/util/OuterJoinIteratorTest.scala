@@ -58,4 +58,26 @@ class OuterJoinIteratorTest extends AnyFunSuite {
     }
   }
 
+  test("repeated or out-or-order keys throws") {
+    assertThrows[IllegalStateException] {
+      val repeatedKeyJoin = new OuterJoinIterator(
+        Iterator("b" -> Iterator(1), "b" -> Iterator(2)),
+        Iterator("b" -> Iterator(3)),
+        Iterator("c" -> Iterator(4)),
+        Iterator("d" -> Iterator(5))
+      )
+      repeatedKeyJoin.foreach(_ => ())
+    }
+
+    assertThrows[IllegalStateException] {
+      val outOfOrderJoin = new OuterJoinIterator(
+        Iterator("b" -> Iterator(1), "a" -> Iterator(2)),
+        Iterator("b" -> Iterator(3)),
+        Iterator("c" -> Iterator(4)),
+        Iterator("d" -> Iterator(5))
+      )
+      outOfOrderJoin.foreach(_ => ())
+    }
+  }
+
 }
