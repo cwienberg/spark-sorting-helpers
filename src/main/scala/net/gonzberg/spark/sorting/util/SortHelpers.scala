@@ -139,7 +139,7 @@ private[sorting] object SortHelpers {
             )
           case (_, Some((k, _))) if prevKey.isDefined && k <= prevKey.get =>
             throw new IllegalArgumentException(
-              "Values cannot have duplicated or out-of-order groupins"
+              "Values cannot have duplicated or out-of-order groupings"
             )
 
           // Only starting values left
