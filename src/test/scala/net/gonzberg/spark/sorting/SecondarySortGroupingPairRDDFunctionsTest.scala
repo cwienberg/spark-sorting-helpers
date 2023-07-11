@@ -233,14 +233,18 @@ class SecondarySortGroupingPairRDDFunctionsTest
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
     val rdd = sc.parallelize(rand.shuffle(input))
     val startingValuesRDD = sc.parallelize(startingValues)
-    assertThrows[SparkException] {
-      rdd
-        .sortedFoldLeftByKey(
-          startingValuesRDD,
-          (q: Queue[Int], v: Int) => q.enqueue(v)
-        )
-        .collect()
-    }
+    val actual = rdd
+      .sortedFoldLeftByKey(
+        startingValuesRDD,
+        (q: Queue[Int], v: Int) => q.enqueue(v)
+      )
+      .collect()
+      .toMap
+    val expected = Map(
+      "key1" -> Queue(-1, 1, 2, 3),
+      "key2" -> Queue(-2)
+    )
+    assert(expected == actual)
   }
 
   test("mapValuesWithKeyedPreparedResource fails when a key has two resources") {

@@ -11,7 +11,7 @@ private[sorting] class GroupByKeyIterator[K, V](iter: Iterator[(K, V)])
   private def failIfPrevIteratorUnexhasuted(): Unit = {
     if (prevIteratorHasElements)
       throw new IllegalStateException(
-        "previously returned iterator is unexhasuted"
+        "previously returned iterator is unexhausted"
       )
   }
 

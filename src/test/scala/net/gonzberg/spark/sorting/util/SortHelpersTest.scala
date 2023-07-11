@@ -131,11 +131,13 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
   test("joinAndFold fails when a value is missing for a key") {
     val operation = (start: Double, next: Int) => start + next
     val startValues = Vector("key1" -> 1.0, "key2" -> 2.0)
-    assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key1" -> Iterator(4, 2, -10))).foreach(identity)
-    }
-    assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key2" -> Iterator(-6))).foreach(identity)
-    }
+    assert(
+      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key1" -> Iterator(4, 2, -10))).toVector ==
+        Seq("key1" -> -3.0, "key2" -> 2.0)
+    )
+    assert(
+      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key2" -> Iterator(-6))).toVector ==
+        Seq("key1" -> 1.0, "key2" -> -4.0)
+    )
   }
 }

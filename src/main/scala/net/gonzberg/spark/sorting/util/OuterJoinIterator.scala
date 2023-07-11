@@ -1,5 +1,7 @@
 package net.gonzberg.spark.sorting.util
 
+import BufferedIteratorHelper.iterHeadOption
+
 import scala.collection.BufferedIterator
 import scala.math.Ordering.Implicits.infixOrderingOps
 
@@ -26,15 +28,6 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
     val isNextKey = iter.hasNext && iter.head._1 == nextKey
     if (isNextKey) {
       Option(iter.next()._2.map(Some(_))).filter(_.nonEmpty)
-    } else {
-      None
-    }
-  }
-
-  // define headOption because 2.11's BufferedIterator doesn't have it
-  private def iterHeadOption[T](iter: BufferedIterator[T]): Option[T] = {
-    if (iter.hasNext) {
-      Some(iter.head)
     } else {
       None
     }
