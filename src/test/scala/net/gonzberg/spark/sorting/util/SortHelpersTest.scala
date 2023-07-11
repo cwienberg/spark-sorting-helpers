@@ -128,14 +128,41 @@ class SortHelpersTest extends AnyFunSuite with SparkTestingMixin {
     }
   }
 
-  test("joinAndFold fails when a value is missing for a key") {
+  test("joinAndFold succeeds when a value is missing for a key") {
     val operation = (start: Double, next: Int) => start + next
     val startValues = Vector("key1" -> 1.0, "key2" -> 2.0)
+    assert(
+      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key1" -> Iterator(4, 2, -10))).toVector ==
+        Seq("key1" -> -3.0, "key2" -> 2.0)
+    )
+    assert(
+      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key2" -> Iterator(-6))).toVector ==
+        Seq("key1" -> 1.0, "key2" -> -4.0)
+    )
+  }
+
+  test("joinAndFold fails when value groupings are duplicated") {
+    val operation = (start: Double, next: Int) => start + next
+    val startValues = Iterator("key1" -> 1.0, "key2" -> 2.0)
+    val values = Iterator("key1" -> Iterator(4, 2, -10), "key1" -> Iterator(4, 2, -10), "key2" -> Iterator(-6))
     assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key1" -> Iterator(4, 2, -10))).foreach(identity)
+      SortHelpers.joinAndFold(operation)(startValues, values).foreach(_ => ())
+    }
+  }
+
+  test("joinAndFold fails when values or start values are out of order") {
+    val operation = (start: Double, next: Int) => start + next
+    assertThrows[IllegalArgumentException] {
+      SortHelpers.joinAndFold(operation)(
+        Iterator("key2" -> 2.0, "key1" -> 1.0),
+        Iterator("key1" -> Iterator(4, 2, -10), "key2" -> Iterator(-6))).foreach(_ => ()
+      )
     }
     assertThrows[IllegalArgumentException] {
-      SortHelpers.joinAndFold(operation)(startValues.iterator, Iterator("key2" -> Iterator(-6))).foreach(identity)
+      SortHelpers.joinAndFold(operation)(
+        Iterator("key1" -> 1.0, "key2" -> 2.0),
+        Iterator("key2" -> Iterator(-6), "key1" -> Iterator(4, 2, -10))).foreach(_ => ()
+      )
     }
   }
 }

@@ -1,18 +1,22 @@
 package net.gonzberg.spark.sorting.util
 
+import BufferedIteratorHelper.iterHeadOption
+
 import scala.collection.BufferedIterator
+import scala.math.Ordering.Implicits.infixOrderingOps
 
 private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
-  iterA: GroupByKeyIterator[K, A],
-  iterB: GroupByKeyIterator[K, B],
-  iterC: GroupByKeyIterator[K, C],
-  iterD: GroupByKeyIterator[K, D]
+  iterA: GroupedByKeyIterator[K, A],
+  iterB: GroupedByKeyIterator[K, B],
+  iterC: GroupedByKeyIterator[K, C],
+  iterD: GroupedByKeyIterator[K, D]
 ) extends Iterator[(K, (Option[A], Option[B], Option[C], Option[D]))] {
   val bufferedIterA: BufferedIterator[(K, Iterator[A])] = iterA.buffered
   val bufferedIterB: BufferedIterator[(K, Iterator[B])] = iterB.buffered
   val bufferedIterC: BufferedIterator[(K, Iterator[C])] = iterC.buffered
   val bufferedIterD: BufferedIterator[(K, Iterator[D])] = iterD.buffered
 
+  var prevKey: Option[K] = None
   var nextGroupIterator
     : Iterator[(K, (Option[A], Option[B], Option[C], Option[D]))] =
     Iterator.empty
@@ -29,15 +33,6 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
     }
   }
 
-  // define headOption because 2.11's BufferedIterator doesn't have it
-  private def iterHeadOption[T](iter: BufferedIterator[T]): Option[T] = {
-    if (iter.hasNext) {
-      Some(iter.head)
-    } else {
-      None
-    }
-  }
-
   private def setNextGroupIterator(): Unit = {
     val maybeKeys = Seq(
       iterHeadOption(bufferedIterA).map(_._1),
@@ -46,6 +41,7 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
       iterHeadOption(bufferedIterD).map(_._1)
     )
     val minKey = maybeKeys.flatten.min
+    requireIncreasingKeys(minKey)
     val iter = (
       prepareForNextGroupIterator(bufferedIterA, minKey),
       prepareForNextGroupIterator(bufferedIterB, minKey),
@@ -83,6 +79,15 @@ private[sorting] class OuterJoinIterator[K: Ordering, A, B, C, D](
       case _ => throw new RuntimeException(s"Issue with key $minKey")
     }
     nextGroupIterator = iter.map(value => minKey -> value)
+  }
+
+  private def requireIncreasingKeys(minKey: K): Unit = {
+    if (!prevKey.map(minKey > _).getOrElse(true)) {
+      throw new IllegalStateException(
+        "next group iterator key must be greater than previous"
+      )
+    }
+    prevKey = Some(minKey)
   }
 
   override def hasNext: Boolean = {

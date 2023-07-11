@@ -161,21 +161,25 @@ class SecondarySortGroupByKeyDatasetFunctionsTest extends AnyFunSuite with Match
     }
   }
 
-  test("sortedFoldLeftByKey with startingValues DS fails when key has no values") {
+  test("sortedFoldLeftByKey with startingValues DS succeeds when key has no values") {
     val input =
       Seq(("key1", 1), ("key1", 2), ("key1", 3))
     val startingValues = Seq(("key1", Queue(-1)), ("key2", Queue(-2)))
     val dataset = rand.shuffle(input).toDS()
     val startingValuesDS: Dataset[(String, Queue[Int])] = startingValues.toDS()
-    assertThrows[SparkException] {
-      dataset
+    val actual = dataset
         .sortedFoldLeftWithKeyedStartValues(
           startingValuesDS,
           (q: Queue[Int], v: Int) => q.enqueue(v),
           dataset.col("_2")
         )
         .collect()
-    }
+        .toMap
+    val expected = Map(
+      "key1" -> Queue(-1, 1, 2, 3),
+      "key2" -> Queue(-2)
+    )
+    assert(expected == actual)
   }
 
 }

@@ -1,7 +1,7 @@
 package net.gonzberg.spark.sorting.util
 
 private[sorting] class GroupByKeyIterator[K, V](iter: Iterator[(K, V)])
-    extends Iterator[(K, Iterator[V])] {
+    extends GroupedByKeyIterator[K, V] {
   private val bufferedIterator = iter.buffered
   private var prevIterator: Option[Iterator[V]] = None
 
@@ -11,7 +11,7 @@ private[sorting] class GroupByKeyIterator[K, V](iter: Iterator[(K, V)])
   private def failIfPrevIteratorUnexhasuted(): Unit = {
     if (prevIteratorHasElements)
       throw new IllegalStateException(
-        "previously returned iterator is unexhasuted"
+        "previously returned iterator is unexhausted"
       )
   }
 
