@@ -22,7 +22,7 @@ def sparkDependency(scalaVersion: String): String = {
   }
 }
 
-lazy val scalatestVersion = "3.2.18"
+lazy val scalatestVersion = "3.2.19"
 
 ThisBuild / organization := "net.gonzberg"
 ThisBuild / homepage := Some(url("https://github.com/cwienberg/spark-sorting-helpers"))
