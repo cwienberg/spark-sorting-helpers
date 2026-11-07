@@ -16,7 +16,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: 8
+        java-version: 25
         cache: sbt
     - name: Lint
       run: sbt scalafmtCheck
@@ -43,7 +43,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: 8
+        java-version: 25
         cache: sbt
     - name: Publish docs
       env:
@@ -60,7 +60,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: temurin
-        java-version: 8
+        java-version: 25
         cache: sbt
     - name: Release to Sonatype
       run: sbt ci-release
